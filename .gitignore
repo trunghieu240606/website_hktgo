@@ -1,0 +1,18 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+Backend/laravel/.env
+Backend/laravel/.env.*
+!Backend/laravel/.env.example
+
+# Dependencies & Logs
+Backend/laravel/vendor/
+Backend/laravel/node_modules/
+Backend/laravel/storage/logs/*.log
+!Backend/laravel/storage/logs/.gitignore
+
+# OS & Office temp files
+.DS_Store
+Thumbs.db
+~$*.docx

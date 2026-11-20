@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Kho Xe - HKTGO Thuê Xe</title>
+    
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon-B1-NXkMJ.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Metis Bootstrap 5 Core CSS -->
+    <link rel="stylesheet" href="./assets/main-Kuf3cpUe.css">
+    
+    <!-- Admin Auth Guard -->
+    <script src="js/admin-auth-guard.js"></script>
+
+    <style>
+      .vehicle-thumb {
+        width: 60px;
+        height: 45px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+      }
+      .badge-status-ranh {
+        background-color: #d1e7dd;
+        color: #0f5132;
+      }
+      .badge-status-thue {
+        background-color: #cfe2ff;
+        color: #084298;
+      }
+      .badge-status-bd {
+        background-color: #f8d7da;
+        color: #842029;
+      }
+    </style>
+</head>
+
+<body data-page="vehicles" class="admin-layout">
+    <div class="admin-app">
+        <div class="admin-wrapper" id="admin-wrapper">
+
+        <!-- Top Header Navbar -->
+        <header class="admin-header">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-3">
+                <div class="container-fluid p-0">
+                    <a class="navbar-brand d-flex align-items-center text-decoration-none me-3" href="index.html">
+                        <i class="fa-solid fa-motorcycle text-primary fs-3 me-2"></i>
+                        <span class="h4 mb-0 fw-bold text-dark">HKT<span class="text-primary">GO</span></span>
+                        <span class="badge bg-primary-subtle text-primary ms-2 fs-7">Quản trị</span>
+                    </a>
+
+                    <ul class="navbar-nav me-auto d-none d-md-flex flex-row gap-2">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Tổng quan</a></li>
+                        <li class="nav-item"><a class="nav-link active fw-semibold" href="buttons.html">Kho xe</a></li>
+                        <li class="nav-item"><a class="nav-link" href="don_thue.html">Đơn thuê</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="../index.html" target="_blank">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Trang khách
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="navbar-nav flex-row align-items-center gap-2">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light text-dark border d-flex align-items-center gap-2 py-1 px-2" 
+                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="./assets/favicon-DiW6HRCs.png" alt="Avatar" width="28" height="28" class="rounded-circle border">
+                                <span class="d-none d-md-inline fw-semibold" id="adminHeaderName">Quản trị viên</span>
+                                <i class="fa-solid fa-chevron-down fs-7 text-muted"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li><h6 class="dropdown-header">admin@example.com</h6></li>
+                                <li><a class="dropdown-item" href="khach_hang.html"><i class="fa-solid fa-users me-2"></i>Khách hàng</a></li>
+                                <li><a class="dropdown-item" href="charts.html"><i class="fa-solid fa-chart-line me-2"></i>Báo cáo</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item text-danger" data-action="logout">
+                                        <i class="fa-solid fa-right-from-bracket me-2"></i>Đăng xuất
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="admin-sidebar" style="width: 250px; border-right: 1px solid #e9ecef; background: #fff;">
+            <div class="sidebar-content p-3">
+                <div class="text-uppercase text-muted fw-bold fs-7 mb-2 px-2">Bảng điều khiển</div>
+                <nav class="sidebar-nav">
+                    <ul class="nav flex-column gap-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="index.html">
+                                <i class="fa-solid fa-gauge me-2 text-secondary"></i> Tổng quan
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active bg-primary text-white rounded px-3 py-2 fw-semibold" href="buttons.html">
+                                <i class="fa-solid fa-motorcycle me-2"></i> Quản lý Kho Xe
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="danh_muc.html">
+                                <i class="fa-solid fa-tags me-2 text-info"></i> Danh mục loại xe
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="don_thue.html">
+                                <i class="fa-solid fa-clipboard-list me-2 text-warning"></i> Quản lý Đơn Thuê
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="khach_hang.html">
+                                <i class="fa-solid fa-users me-2 text-success"></i> Quản lý Khách Hàng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="charts.html">
+                                <i class="fa-solid fa-chart-pie me-2 text-danger"></i> Thống kê Doanh Thu
+                            </a>
+                        </li>
+
+                        <li class="nav-item mt-3 pt-3 border-top">
+                            <div class="text-uppercase text-muted fw-bold fs-7 mb-2 px-2">Lối tắt</div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary rounded px-3 py-2" href="../index.html" target="_blank">
+                                <i class="fa-solid fa-house me-2"></i> Xem trang chủ Khách
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger rounded px-3 py-2 btn-admin-logout" href="#" data-action="logout">
+                                <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="admin-main p-4" style="background-color: #f8f9fa;">
+            <div class="container-fluid">
+                <!-- Page Title -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-4">
+                    <div>
+                        <h2 class="h4 fw-bold mb-1">Quản lý Kho Xe Máy</h2>
+                        <p class="text-muted mb-0">Quản lý thêm, sửa, xóa và theo dõi trạng thái xe trong hệ thống</p>
+                    </div>
+                    <div class="d-flex gap-2" id="adminVehicleActions">
+                        <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#formThemXeCollapse" aria-expanded="false" id="btnToggleFormThemXe">
+                            <i class="fa-solid fa-plus me-1"></i> Thêm xe mới
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm" type="button" id="btnXoaTatCaXe" title="Xóa toàn bộ xe trong kho">
+                            <i class="fa-solid fa-trash-can me-1"></i> Xóa toàn bộ kho
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Role Permission Info Banner for Vehicle Inventory -->
+                <div id="vehicleRoleBanner"></div>
+
+                <!-- Form Thêm / Sửa Xe (Collapse) -->
+                <div class="collapse mb-4" id="formThemXeCollapse">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 fw-bold text-primary" id="tieuDeFormThemXe">
+                                <i class="fa-solid fa-circle-plus me-2"></i>Nhập Thông Tin Xe Mới
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-toggle="collapse" data-bs-target="#formThemXeCollapse" aria-label="Close"></button>
+                        </div>
+                        <div class="card-body p-4">
+                            <form id="formThemXe" onsubmit="return false;">
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-4">
+                                        <label for="nhapTenXe" class="form-label fw-semibold">Tên Xe <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="nhapTenXe" placeholder="VD: Honda Vision 2024" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="nhapBienSo" class="form-label fw-semibold">Biển Số <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="nhapBienSo" placeholder="VD: 59A-12345" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="nhapLoaiXe" class="form-label fw-semibold">Danh mục / Loại xe <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="nhapLoaiXe" required>
+                                            <option value="">Đang tải danh mục...</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-md-3">
+                                        <label for="nhapGiaThue" class="form-label fw-semibold">Giá thuê/ngày (VNĐ) <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="nhapGiaThue" placeholder="VD: 150000" min="0" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="nhapSoLuong" class="form-label fw-semibold">Số lượng trong kho <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="nhapSoLuong" placeholder="VD: 5" min="1" value="5" required>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="nhapTrangThai" class="form-label fw-semibold">Trạng thái xe</label>
+                                        <select class="form-select" id="nhapTrangThai">
+                                            <option value="Đang rảnh">Đang rảnh (Sẵn sàng cho thuê)</option>
+                                            <option value="Bảo dưỡng">Bảo dưỡng / Sửa chữa</option>
+                                            <option value="Hết xe">Hết xe</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="nhapHangXe" class="form-label fw-semibold">Hãng xe</label>
+                                        <input type="text" class="form-control" id="nhapHangXe" placeholder="VD: Honda, Yamaha...">
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">Tải ảnh xe lên từ máy</label>
+                                        <input type="file" class="form-control" id="nhapHinhAnhFile" accept="image/*">
+                                        <div class="form-text fs-8 text-muted" id="uploadStatusText">Hỗ trợ JPG, PNG, WEBP (tối đa 5MB)</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="nhapHinhAnh" class="form-label fw-semibold">Hoặc đường dẫn ảnh (URL)</label>
+                                        <input type="text" class="form-control" id="nhapHinhAnh" placeholder="images/ten-xe.jpg hoặc https://...">
+                                    </div>
+                                    <div class="col-12 d-none" id="previewContainer">
+                                        <div class="p-2 border rounded bg-light d-inline-block">
+                                            <small class="text-muted d-block mb-1">Ảnh xem trước:</small>
+                                            <img id="previewHinhAnh" src="" alt="Preview" style="max-height: 90px; border-radius: 4px;">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="d-flex justify-content-end gap-2 border-top pt-3">
+                                    <button type="button" class="btn btn-outline-secondary" data-bs-toggle="collapse" data-bs-target="#formThemXeCollapse" onclick="resetFormThemXe()">Hủy</button>
+                                    <button type="submit" class="btn btn-primary" id="btnLuuXe">
+                                        <i class="fa-solid fa-save me-1"></i> Lưu vào kho
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng Danh Sách Xe -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                    <input type="text" class="form-control border-start-0" id="oTimKiemXe" placeholder="Tìm theo tên xe, biển số, trạng thái...">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="oLocDanhMucXe">
+                                    <option value="">Tất cả danh mục loại xe</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 text-md-end">
+                                <button class="btn btn-outline-secondary btn-sm w-100" id="btnTaiLaiXe">
+                                    <i class="fa-solid fa-arrows-rotate me-1"></i> Làm mới
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light fs-7 text-uppercase text-muted">
+                                    <tr>
+                                        <th class="ps-3 text-center" style="width: 50px;">ID</th>
+                                        <th style="width: 80px;">Ảnh</th>
+                                        <th>Tên Xe</th>
+                                        <th>Biển Số</th>
+                                        <th>Loại Xe</th>
+                                        <th>Giá Thuê / Ngày</th>
+                                        <th>Số Lượng Kho</th>
+                                        <th>Trạng Thái</th>
+                                        <th class="text-end pe-3" style="width: 140px;">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="duLieuXe">
+                                    <tr>
+                                        <td colspan="9" class="text-center py-4 text-muted">
+                                            <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Đang tải kho xe...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/common-danh-muc-xe.js"></script>
+
+    <script>
+      (function () {
+        const API_HOST = (window.location.hostname && window.location.hostname !== "localhost") ? window.location.hostname : "127.0.0.1";
+        const API_BASE = "http://" + API_HOST + ":8081/api/xe";
+        let editingXeId = null;
+
+        function formatVND(val) {
+          return Number(val || 0).toLocaleString("vi-VN") + " ₫";
+        }
+
+        function escapeHtml(str) {
+          return String(str || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        }
+
+        function resetFormThemXe() {
+          editingXeId = null;
+          document.getElementById("tieuDeFormThemXe").innerHTML = '<i class="fa-solid fa-circle-plus me-2"></i>Nhập Thông Tin Xe Mới';
+          document.getElementById("btnLuuXe").innerHTML = '<i class="fa-solid fa-save me-1"></i> Lưu vào kho';
+          document.getElementById("formThemXe").reset();
+          document.getElementById("nhapSoLuong").value = "5";
+          document.getElementById("previewContainer").classList.add("d-none");
+          document.getElementById("previewHinhAnh").src = "";
+          document.getElementById("uploadStatusText").textContent = "Hỗ trợ JPG, PNG, WEBP (tối đa 5MB)";
+        }
+        window.resetFormThemXe = resetFormThemXe;
+
+        function fillFormSuaXe(xe) {
+          editingXeId = xe.id;
+          document.getElementById("tieuDeFormThemXe").innerHTML = '<i class="fa-solid fa-pen-to-square me-2"></i>Cập Nhật Xe #' + xe.id;
+          document.getElementById("btnLuuXe").innerHTML = '<i class="fa-solid fa-check me-1"></i> Lưu thay đổi';
+          document.getElementById("nhapTenXe").value = xe.tenXe || "";
+          document.getElementById("nhapBienSo").value = xe.bienSo || "";
+          document.getElementById("nhapLoaiXe").value = xe.loaiXe || "";
+          document.getElementById("nhapGiaThue").value = xe.giaThue || "";
+          document.getElementById("nhapSoLuong").value = xe.soLuong || xe.so_luong || 5;
+          document.getElementById("nhapTrangThai").value = xe.trangThai || "Đang rảnh";
+          document.getElementById("nhapHangXe").value = xe.hangXe || "";
+          document.getElementById("nhapHinhAnh").value = xe.hinhAnh || "";
+
+          var hAnh = xe.hinhAnh || "";
+          if (hAnh) {
+            var srcAnh = (hAnh.indexOf("http") === 0 || hAnh.indexOf("../") === 0) ? hAnh : ("../" + hAnh);
+            document.getElementById("previewHinhAnh").src = srcAnh;
+            document.getElementById("previewContainer").classList.remove("d-none");
+          } else {
+            document.getElementById("previewContainer").classList.add("d-none");
+          }
+
+          var formCollapse = new bootstrap.Collapse(document.getElementById("formThemXeCollapse"), { toggle: false });
+          formCollapse.show();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        function taiDanhSachXe() {
+          fetch(API_BASE + "/danh-sach")
+            .then(function(res) {
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              return res.json();
+            })
+            .then(function(data) {
+              var list = (data && data.data) ? data.data : (Array.isArray(data) ? data : []);
+              var html = "";
+
+              var isAdm = window.HKTAuth ? window.HKTAuth.isAdmin() : false;
+              var role = window.HKTAuth ? window.HKTAuth.getRole() : "USER";
+
+              // Hiển thị banner phân quyền
+              var bannerEl = document.getElementById("vehicleRoleBanner");
+              var actionsEl = document.getElementById("adminVehicleActions");
+              if (bannerEl) {
+                if (isAdm) {
+                  bannerEl.innerHTML = '<div class="alert alert-success border-success-subtle d-flex align-items-center mb-4 py-2 px-3 rounded-3 shadow-sm">' +
+                    '<i class="fa-solid fa-shield-halved text-success fs-4 me-3"></i>' +
+                    '<div><strong class="text-success">Đặc quyền Quản trị viên (Admin):</strong> Bạn có toàn quyền thêm xe mới, chỉnh sửa thông tin xe và xóa xe trong kho.</div>' +
+                  '</div>';
+                  if (actionsEl) {
+                    actionsEl.classList.remove("d-none");
+                    actionsEl.style.removeProperty("display");
+                  }
+                } else {
+                  var rTitle = (role === "MANAGER") ? "Quản lý (Manager)" : "Nhân viên (Staff)";
+                  bannerEl.innerHTML = '<div class="alert alert-warning border-warning-subtle d-flex align-items-center mb-4 py-2 px-3 rounded-3 shadow-sm">' +
+                    '<i class="fa-solid fa-lock text-warning fs-4 me-3"></i>' +
+                    '<div><strong class="text-warning">Chế độ xem:</strong> Bạn đang đăng nhập với vai trò <strong>' + rTitle + '</strong>. Bạn có quyền theo dõi số lượng tồn kho nhưng <strong>không được phép Thêm, Sửa hoặc Xóa xe</strong> (Chỉ Admin mới có quyền).</div>' +
+                  '</div>';
+                  if (actionsEl) {
+                    actionsEl.classList.add("d-none");
+                    actionsEl.style.setProperty("display", "none", "important");
+                  }
+                }
+              }
+
+              list.forEach(function(xe) {
+                var id = xe.id || "";
+                var ten = xe.tenXe || "N/A";
+                var bien = xe.bienSo || "N/A";
+                var loai = xe.loaiXe || "N/A";
+                var gia = xe.giaThue || 0;
+                var soLuong = Number(xe.soLuong || xe.so_luong || 5);
+                var conLai = (xe.soLuongConLai !== undefined) ? Number(xe.soLuongConLai) : ((xe.so_luong_con_lai !== undefined) ? Number(xe.so_luong_con_lai) : soLuong);
+                var isHet = conLai <= 0;
+                var tt = String(xe.trangThai || "Đang rảnh").trim();
+
+                var badgeClass = "badge-status-ranh";
+                var badgeText = "Sẵn sàng";
+                if (tt.toLowerCase().indexOf("dưỡng") !== -1 || tt.toLowerCase().indexOf("sửa") !== -1) {
+                  badgeClass = "badge-status-bd";
+                  badgeText = "Bảo dưỡng";
+                } else if (isHet || tt.toLowerCase().indexOf("hết") !== -1) {
+                  badgeClass = "badge-status-bd";
+                  badgeText = "Hết xe";
+                } else if (tt.toLowerCase().indexOf("thuê") !== -1 || tt.toLowerCase().indexOf("bận") !== -1) {
+                  badgeClass = "badge-status-thue";
+                  badgeText = "Đang thuê";
+                }
+
+                var stockBadge = isHet 
+                  ? '<span class="badge bg-danger text-white px-2 py-1"><i class="fa-solid fa-triangle-exclamation me-1"></i>Hết xe (0/' + soLuong + ')</span>'
+                  : '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="fa-solid fa-boxes-stacked me-1"></i>Còn ' + conLai + ' / ' + soLuong + ' xe</span>';
+
+                var imgUrl = xe.hinhAnh || "../images/car-1.jpg";
+                if (imgUrl.indexOf("http") !== 0 && imgUrl.indexOf("../") !== 0) {
+                  imgUrl = "../" + imgUrl;
+                }
+
+                var actionsHtml = "";
+                if (isAdm) {
+                  actionsHtml = '<button type="button" class="btn btn-outline-primary btn-sm me-1 btn-sua-xe" data-id="' + id + '" title="Sửa">' +
+                      '<i class="fa-solid fa-pen-to-square"></i>' +
+                    '</button>' +
+                    '<button type="button" class="btn btn-outline-danger btn-sm btn-xoa-xe" data-id="' + id + '" title="Xóa">' +
+                      '<i class="fa-solid fa-trash-can"></i>' +
+                    '</button>';
+                } else {
+                  actionsHtml = '<span class="badge bg-light text-muted border px-2 py-1" title="Chỉ Admin mới có quyền sửa/xóa xe"><i class="fa-solid fa-lock me-1"></i>Chỉ Admin</span>';
+                }
+
+                html += '<tr>' +
+                  '<td class="ps-3 text-center fw-bold text-muted">' + id + '</td>' +
+                  '<td><img src="' + escapeHtml(imgUrl) + '" class="vehicle-thumb" onerror="this.src=\'../images/car-1.jpg\'"></td>' +
+                  '<td class="fw-bold text-dark">' + escapeHtml(ten) + '</td>' +
+                  '<td><code>' + escapeHtml(bien) + '</code></td>' +
+                  '<td><span class="badge bg-light text-dark border">' + escapeHtml(loai) + '</span></td>' +
+                  '<td class="text-primary fw-bold">' + formatVND(gia) + '</td>' +
+                  '<td>' + stockBadge + '</td>' +
+                  '<td><span class="badge ' + badgeClass + ' px-2 py-1">' + escapeHtml(badgeText) + '</span></td>' +
+                  '<td class="text-end pe-3">' + actionsHtml + '</td>' +
+                '</tr>';
+              });
+
+              document.getElementById("duLieuXe").innerHTML = html || '<tr><td colspan="9" class="text-center py-4 text-muted">Kho xe trống.</td></tr>';
+
+              // Gắn sự kiện sửa (chỉ khi là Admin)
+              if (isAdm) {
+                document.querySelectorAll(".btn-sua-xe").forEach(function(btn) {
+                  btn.addEventListener("click", function() {
+                    var id = Number(btn.dataset.id);
+                    var xe = list.find(function(x) { return x.id === id; });
+                    if (xe) fillFormSuaXe(xe);
+                  });
+                });
+
+                // Gắn sự kiện xóa
+                document.querySelectorAll(".btn-xoa-xe").forEach(function(btn) {
+                  btn.addEventListener("click", function() {
+                    var id = btn.dataset.id;
+                    if (confirm("Bạn có chắc chắn muốn xóa xe #" + id + " khỏi cơ sở dữ liệu?")) {
+                      var headers = window.HKTAuth ? window.HKTAuth.getAuthHeaders() : {};
+                      fetch(API_BASE + "/xoa/" + id, { method: "DELETE", headers: headers })
+                        .then(function(r) { return r.json(); })
+                        .then(function(res) {
+                          alert((res && res.message) || "Đã xóa xe thành công!");
+                          taiDanhSachXe();
+                        })
+                        .catch(function() {
+                          alert("Lỗi khi xóa xe.");
+                        });
+                    }
+                  });
+                });
+              }
+            })
+            .catch(function(e) {
+              console.error("Lỗi tải xe:", e);
+              document.getElementById("duLieuXe").innerHTML = '<tr><td colspan="8" class="text-center py-4 text-danger">Không kết nối được server backend cổng 8081.</td></tr>';
+            });
+        }
+
+        // Tải danh mục vào dropdown
+        function taiDanhMuc() {
+          HKTDanhMucXe.fetchDanhMuc()
+            .then(function(list) {
+              var sel1 = document.getElementById("nhapLoaiXe");
+              var sel2 = document.getElementById("oLocDanhMucXe");
+              HKTDanhMucXe.fillSelect(sel1, list, false);
+              HKTDanhMucXe.fillSelectFilter(sel2, list);
+            })
+            .catch(function() {
+              document.getElementById("nhapLoaiXe").innerHTML = '<option value="Xe tay ga">Xe tay ga</option><option value="Xe số">Xe số</option><option value="Xe côn tay">Xe côn tay</option>';
+            });
+        }
+
+        // Upload ảnh xe
+        var fileInput = document.getElementById("nhapHinhAnhFile");
+        if (fileInput) {
+          fileInput.addEventListener("change", function(e) {
+            var file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            var fd = new FormData();
+            fd.append("anhXe", file);
+            document.getElementById("uploadStatusText").textContent = "Đang tải ảnh lên máy chủ...";
+
+            var headers = window.HKTAuth ? window.HKTAuth.getAuthHeaders() : {};
+            fetch(API_BASE + "/upload-anh", {
+              method: "POST",
+              headers: headers,
+              body: fd
+            })
+              .then(function(r) { return r.json(); })
+              .then(function(res) {
+                if (res && res.code === "SUCCESS") {
+                  document.getElementById("nhapHinhAnh").value = res.data.filePath;
+                  document.getElementById("previewHinhAnh").src = "../" + res.data.filePath;
+                  document.getElementById("previewContainer").classList.remove("d-none");
+                  document.getElementById("uploadStatusText").textContent = "✓ Tải ảnh thành công: " + res.data.fileName;
+                } else {
+                  throw new Error((res && res.message) || "Upload thất bại");
+                }
+              })
+              .catch(function(err) {
+                document.getElementById("uploadStatusText").textContent = "⚠ Lỗi tải ảnh: " + err.message;
+              });
+          });
+        }
+
+        // Xóa toàn bộ kho xe
+        document.getElementById("btnXoaTatCaXe").addEventListener("click", function() {
+          var xacNhan1 = confirm("CẢNH BÁO NGUY HIỂM:\nBạn có chắc chắn muốn XÓA TOÀN BỘ xe trong kho?");
+          if (!xacNhan1) return;
+          var xacNhan2 = confirm("XÁC NHẬN LẦN 2:\nHành động này không thể hoàn tác. Mọi xe máy sẽ bị xóa khỏi cơ sở dữ liệu. Tiếp tục?");
+          if (!xacNhan2) return;
+
+          var headers = window.HKTAuth ? window.HKTAuth.getAuthHeaders() : {};
+          fetch(API_BASE + "/xoa-tat-ca", { method: "DELETE", headers: headers })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+              alert((res && res.message) || "Đã xóa toàn bộ kho xe thành công!");
+              taiDanhSachXe();
+            })
+            .catch(function(e) {
+              alert("Lỗi khi xóa toàn bộ kho xe.");
+            });
+        });
+
+        // Lưu / Sửa xe
+        document.getElementById("formThemXe").addEventListener("submit", function(e) {
+          e.preventDefault();
+          var ten = document.getElementById("nhapTenXe").value.trim();
+          var bien = document.getElementById("nhapBienSo").value.trim();
+          var loai = document.getElementById("nhapLoaiXe").value.trim();
+          var gia = Number(document.getElementById("nhapGiaThue").value);
+          var soLuong = Number(document.getElementById("nhapSoLuong").value) || 5;
+          var tt = document.getElementById("nhapTrangThai").value;
+          var hang = document.getElementById("nhapHangXe").value.trim();
+          var anh = document.getElementById("nhapHinhAnh").value.trim();
+
+          var payload = {
+            tenXe: ten,
+            bienSo: bien,
+            loaiXe: loai,
+            giaThue: gia,
+            soLuong: soLuong,
+            so_luong: soLuong,
+            trangThai: tt,
+            hangXe: hang,
+            hinhAnh: anh
+          };
+
+          var url = editingXeId ? (API_BASE + "/sua/" + editingXeId) : (API_BASE + "/them");
+          var method = "POST";
+          var headers = Object.assign({
+            "Content-Type": "application/json"
+          }, window.HKTAuth ? window.HKTAuth.getAuthHeaders() : {});
+
+          fetch(url, {
+            method: method,
+            headers: headers,
+            body: JSON.stringify(payload)
+          })
+            .then(function(r) {
+              return r.json().then(function(body) {
+                if (!r.ok) {
+                  throw new Error((body && body.message) || ("HTTP " + r.status));
+                }
+                return body;
+              });
+            })
+            .then(function(res) {
+              alert((res && res.message) || (editingXeId ? "Cập nhật xe thành công!" : "Thêm xe vào kho thành công!"));
+              resetFormThemXe();
+              var formCollapse = bootstrap.Collapse.getInstance(document.getElementById("formThemXeCollapse"));
+              if (formCollapse) formCollapse.hide();
+              taiDanhSachXe();
+            })
+            .catch(function(e) {
+              alert("Lỗi khi lưu thông tin xe: " + e.message);
+            });
+        });
+
+        // Lọc xe
+        function locXe() {
+          var kw = document.getElementById("oTimKiemXe").value.toLowerCase().trim();
+          var cat = document.getElementById("oLocDanhMucXe").value.toLowerCase().trim();
+          var rows = document.querySelectorAll("#duLieuXe tr");
+
+          rows.forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            var cells = row.querySelectorAll("td");
+            if (cells.length < 5) return;
+            var loaiCell = cells[4].textContent.toLowerCase();
+
+            var matchKw = !kw || text.indexOf(kw) !== -1;
+            var matchCat = !cat || loaiCell.indexOf(cat) !== -1;
+
+            row.style.display = (matchKw && matchCat) ? "" : "none";
+          });
+        }
+
+        document.getElementById("oTimKiemXe").addEventListener("input", locXe);
+        document.getElementById("oLocDanhMucXe").addEventListener("change", locXe);
+        document.getElementById("btnTaiLaiXe").addEventListener("click", taiDanhSachXe);
+
+        // Khởi động
+        taiDanhMuc();
+        taiDanhSachXe();
+      })();
+    </script>
+</body>
+</html>

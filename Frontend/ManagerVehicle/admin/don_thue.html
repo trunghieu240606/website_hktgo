@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="vi" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Đơn Thuê - HKTGO Thuê Xe</title>
+    
+    <!-- Favicon & Icons -->
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon-B1-NXkMJ.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Metis Bootstrap 5 Core CSS -->
+    <link rel="stylesheet" href="./assets/main-Kuf3cpUe.css">
+    
+    <!-- Admin Auth Guard -->
+    <script src="js/admin-auth-guard.js"></script>
+
+    <style>
+      .badge-status-cho { background-color: #fff3cd; color: #664d03; }
+      .badge-status-duyet { background-color: #cfe2ff; color: #084298; }
+      .badge-status-thue { background-color: #e0cffc; color: #3d0a91; }
+      .badge-status-xong { background-color: #d1e7dd; color: #0f5132; }
+      .badge-status-huy { background-color: #f8d7da; color: #842029; }
+    </style>
+</head>
+
+<body data-page="orders" class="admin-layout">
+    <div class="admin-app">
+        <div class="admin-wrapper" id="admin-wrapper">
+
+        <!-- Top Header Navbar -->
+        <header class="admin-header">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-3">
+                <div class="container-fluid p-0">
+                    <a class="navbar-brand d-flex align-items-center text-decoration-none me-3" href="index.html">
+                        <i class="fa-solid fa-motorcycle text-primary fs-3 me-2"></i>
+                        <span class="h4 mb-0 fw-bold text-dark">HKT<span class="text-primary">GO</span></span>
+                        <span class="badge bg-primary-subtle text-primary ms-2 fs-7">Quản trị</span>
+                    </a>
+
+                    <ul class="navbar-nav me-auto d-none d-md-flex flex-row gap-2">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Tổng quan</a></li>
+                        <li class="nav-item"><a class="nav-link" href="buttons.html">Kho xe</a></li>
+                        <li class="nav-item"><a class="nav-link active fw-semibold" href="don_thue.html">Đơn thuê</a></li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="../index.html" target="_blank">
+                                <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Trang khách
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="navbar-nav flex-row align-items-center gap-2">
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light text-dark border d-flex align-items-center gap-2 py-1 px-2" 
+                                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="./assets/favicon-DiW6HRCs.png" alt="Avatar" width="28" height="28" class="rounded-circle border">
+                                <span class="d-none d-md-inline fw-semibold" id="adminHeaderName">Quản trị viên</span>
+                                <i class="fa-solid fa-chevron-down fs-7 text-muted"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li><h6 class="dropdown-header">admin@example.com</h6></li>
+                                <li><a class="dropdown-item" href="khach_hang.html"><i class="fa-solid fa-users me-2"></i>Khách hàng</a></li>
+                                <li><a class="dropdown-item" href="charts.html"><i class="fa-solid fa-chart-line me-2"></i>Báo cáo</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <button class="dropdown-item text-danger" data-action="logout">
+                                        <i class="fa-solid fa-right-from-bracket me-2"></i>Đăng xuất
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="admin-sidebar" style="width: 250px; border-right: 1px solid #e9ecef; background: #fff;">
+            <div class="sidebar-content p-3">
+                <div class="text-uppercase text-muted fw-bold fs-7 mb-2 px-2">Bảng điều khiển</div>
+                <nav class="sidebar-nav">
+                    <ul class="nav flex-column gap-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="index.html">
+                                <i class="fa-solid fa-gauge me-2 text-secondary"></i> Tổng quan
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="buttons.html">
+                                <i class="fa-solid fa-motorcycle me-2 text-primary"></i> Quản lý Kho Xe
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="danh_muc.html">
+                                <i class="fa-solid fa-tags me-2 text-info"></i> Danh mục loại xe
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active bg-primary text-white rounded px-3 py-2 fw-semibold" href="don_thue.html">
+                                <i class="fa-solid fa-clipboard-list me-2"></i> Quản lý Đơn Thuê
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="khach_hang.html">
+                                <i class="fa-solid fa-users me-2 text-success"></i> Quản lý Khách Hàng
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark rounded px-3 py-2" href="charts.html">
+                                <i class="fa-solid fa-chart-pie me-2 text-danger"></i> Thống kê Doanh Thu
+                            </a>
+                        </li>
+
+                        <li class="nav-item mt-3 pt-3 border-top">
+                            <div class="text-uppercase text-muted fw-bold fs-7 mb-2 px-2">Lối tắt</div>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-secondary rounded px-3 py-2" href="../index.html" target="_blank">
+                                <i class="fa-solid fa-house me-2"></i> Xem trang chủ Khách
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger rounded px-3 py-2 btn-admin-logout" href="#" data-action="logout">
+                                <i class="fa-solid fa-arrow-right-from-bracket me-2"></i> Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main id="main-content" class="admin-main p-4" style="background-color: #f8f9fa;">
+            <div class="container-fluid">
+                <!-- Page Title -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="h4 fw-bold mb-1">Quản lý Đơn Thuê Xe</h2>
+                        <p class="text-muted mb-0">Theo dõi, xét duyệt và cập nhật tiến trình thuê xe của khách hàng</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline-secondary btn-sm" id="btnTaiLaiDon">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i> Làm mới danh sách
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4 Thẻ Đếm Trạng Thái Đơn -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="card border-0 shadow-sm p-3">
+                            <span class="text-muted fs-7 fw-semibold">Tổng đơn đặt</span>
+                            <h3 class="fw-bold mb-0 text-primary" id="cntTongDon">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="card border-0 shadow-sm p-3">
+                            <span class="text-muted fs-7 fw-semibold">Đơn chờ duyệt</span>
+                            <h3 class="fw-bold mb-0 text-warning" id="cntChoDuyet">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="card border-0 shadow-sm p-3">
+                            <span class="text-muted fs-7 fw-semibold">Xe đang thuê</span>
+                            <h3 class="fw-bold mb-0 text-info" id="cntDangThue">0</h3>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-xl-3">
+                        <div class="card border-0 shadow-sm p-3">
+                            <span class="text-muted fs-7 fw-semibold">Đã hoàn thành</span>
+                            <h3 class="fw-bold mb-0 text-success" id="cntHoanThanh">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng Danh Sách Đơn Thuê -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white py-3 border-bottom">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                    <input type="text" class="form-control border-start-0" id="oTimKiemDon" placeholder="Tìm theo mã đơn, tên khách, số điện thoại, tên xe...">
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <div class="btn-group btn-group-sm" role="group" id="filterStatusGroup">
+                                    <button type="button" class="btn btn-outline-primary active" data-status="">Tất cả</button>
+                                    <button type="button" class="btn btn-outline-warning" data-status="CHỜ">Chờ duyệt</button>
+                                    <button type="button" class="btn btn-outline-info" data-status="ĐANG THUÊ">Đang thuê</button>
+                                    <button type="button" class="btn btn-outline-success" data-status="HOÀN THÀNH">Hoàn thành</button>
+                                    <button type="button" class="btn btn-outline-danger" data-status="ĐÃ HỦY">Đã hủy</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light fs-7 text-uppercase text-muted">
+                                    <tr>
+                                        <th class="ps-3 text-center" style="width: 70px;">Mã Đơn</th>
+                                        <th>Khách Hàng</th>
+                                        <th>SĐT</th>
+                                        <th>Xe Thuê</th>
+                                        <th>Thời Gian Thuê</th>
+                                        <th>Tổng Tiền</th>
+                                        <th>Trạng Thái</th>
+                                        <th class="text-end pe-3" style="width: 170px;">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="duLieuDonThue">
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">
+                                            <i class="fa-solid fa-circle-notch fa-spin me-2"></i>Đang tải dữ liệu đơn thuê...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      (function () {
+        const API_HOST = (window.location.hostname && window.location.hostname !== "localhost") ? window.location.hostname : "127.0.0.1";
+        const API_BASE = "http://" + API_HOST + ":8081";
+        let danhSachDon = [];
+        let locTrangThai = "";
+
+        function formatVND(val) {
+          return Number(val || 0).toLocaleString("vi-VN") + " ₫";
+        }
+
+        function escapeHtml(str) {
+          return String(str || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        }
+
+        function taiDanhSachDon() {
+          fetch(API_BASE + "/api/don-thue/danh-sach")
+            .then(function(res) {
+              if (!res.ok) throw new Error("HTTP " + res.status);
+              return res.json();
+            })
+            .then(function(data) {
+              danhSachDon = Array.isArray(data) ? data : [];
+              capNhatThongKe(danhSachDon);
+              renderBangDon(danhSachDon);
+            })
+            .catch(function(e) {
+              console.error("Lỗi:", e);
+              document.getElementById("duLieuDonThue").innerHTML =
+                '<tr><td colspan="8" class="text-center py-4 text-danger">Không tải được đơn thuê (kiểm tra server cổng 8081).</td></tr>';
+            });
+        }
+
+        function capNhatThongKe(list) {
+          var tong = list.length;
+          var cho = 0, thue = 0, xong = 0;
+
+          list.forEach(function(d) {
+            var tt = String(d.trangThai || "").toUpperCase();
+            if (tt.indexOf("CHỜ") !== -1 || tt.indexOf("PENDING") !== -1) cho++;
+            else if (tt.indexOf("THUÊ") !== -1 || tt.indexOf("RENTED") !== -1) thue++;
+            else if (tt.indexOf("HOÀN") !== -1 || tt.indexOf("COMPLETED") !== -1 || tt.indexOf("DUYỆT") !== -1) xong++;
+          });
+
+          document.getElementById("cntTongDon").textContent = tong;
+          document.getElementById("cntChoDuyet").textContent = cho;
+          document.getElementById("cntDangThue").textContent = thue;
+          document.getElementById("cntHoanThanh").textContent = xong;
+        }
+
+        function renderBangDon(list) {
+          var kw = document.getElementById("oTimKiemDon").value.toLowerCase().trim();
+          var filterStatus = locTrangThai.toUpperCase();
+
+          var filtered = list.filter(function(d) {
+            var id = String(d.id || "");
+            var tenKhach = String(d.tenKhachHang || d.ten_khach_hang || d.hoTen || d.tenKhach || "").toLowerCase();
+            var sdt = String(d.sdt || d.soDienThoai || "");
+            var tenXe = String(d.tenXe || (d.xe && d.xe.tenXe) || "").toLowerCase();
+            var tt = String(d.trangThai || "").toUpperCase();
+
+            var matchKw = !kw || id.includes(kw) || tenKhach.includes(kw) || sdt.includes(kw) || tenXe.includes(kw);
+            var matchStatus = !filterStatus || tt.includes(filterStatus);
+            return matchKw && matchStatus;
+          });
+
+          if (!filtered.length) {
+            document.getElementById("duLieuDonThue").innerHTML =
+              '<tr><td colspan="8" class="text-center py-4 text-muted">Không tìm thấy đơn thuê phù hợp.</td></tr>';
+            return;
+          }
+
+          var html = "";
+          filtered.forEach(function(d) {
+            var id = d.id;
+            var tenKhach = d.tenKhachHang || d.ten_khach_hang || d.hoTen || d.tenKhach || "Khách lẻ";
+            var sdt = d.sdt || d.soDienThoai || "—";
+            var tenXe = d.tenXe || (d.xe && d.xe.tenXe) || "Xe máy";
+            var ngay = (d.ngayNhan || d.ngay_nhan || "—") + " → " + (d.ngayTra || d.ngay_tra || "—");
+            var tongTien = formatVND(d.tongTien || d.tong_tien);
+            var tt = String(d.trangThai || d.trang_thai || "Chờ duyệt").trim();
+
+            var badgeClass = "badge-status-cho";
+            var ttUpper = tt.toUpperCase();
+            if (ttUpper.indexOf("CHỜ") !== -1) badgeClass = "badge-status-cho";
+            else if (ttUpper.indexOf("THUÊ") !== -1) badgeClass = "badge-status-thue";
+            else if (ttUpper.indexOf("HOÀN") !== -1) badgeClass = "badge-status-xong";
+            else if (ttUpper.indexOf("DUYỆT") !== -1) badgeClass = "badge-status-duyet";
+            else if (ttUpper.indexOf("HỦY") !== -1) badgeClass = "badge-status-huy";
+
+            html += '<tr>' +
+              '<td class="ps-3 text-center fw-bold text-primary">#' + id + '</td>' +
+              '<td class="fw-semibold">' + escapeHtml(tenKhach) + '</td>' +
+              '<td><code>' + escapeHtml(sdt) + '</code></td>' +
+              '<td class="fw-semibold text-dark">' + escapeHtml(tenXe) + '</td>' +
+              '<td><small class="text-muted">' + escapeHtml(ngay) + '</small></td>' +
+              '<td class="fw-bold text-success">' + tongTien + '</td>' +
+              '<td><span class="badge ' + badgeClass + ' px-2 py-1">' + escapeHtml(tt) + '</span></td>' +
+              '<td class="text-end pe-3">' +
+                '<div class="btn-group btn-group-sm">' +
+                  '<button type="button" class="btn btn-outline-success btn-sm btn-action" data-id="' + id + '" data-status="Đang thuê" title="Duyệt đơn và giao xe cho khách">' +
+                    '<i class="fa-solid fa-check"></i>' +
+                  '</button>' +
+                  '<button type="button" class="btn btn-outline-primary btn-sm btn-action" data-id="' + id + '" data-status="Hoàn thành" title="Hoàn thành và khách trả xe">' +
+                    '<i class="fa-solid fa-flag-checkered"></i>' +
+                  '</button>' +
+                  '<button type="button" class="btn btn-outline-danger btn-sm btn-action" data-id="' + id + '" data-status="Đã hủy" title="Hủy đơn thuê">' +
+                    '<i class="fa-solid fa-xmark"></i>' +
+                  '</button>' +
+                '</div>' +
+              '</td>' +
+            '</tr>';
+          });
+
+          document.getElementById("duLieuDonThue").innerHTML = html;
+
+          // Gắn sự kiện cập nhật trạng thái đơn
+          document.querySelectorAll(".btn-action").forEach(function(btn) {
+            btn.addEventListener("click", function() {
+              var id = btn.dataset.id;
+              var st = btn.dataset.status;
+              if (confirm("Xác nhận chuyển trạng thái đơn #" + id + " thành [" + st + "]?")) {
+                var authHeaders = Object.assign(
+                  { "Content-Type": "application/json" },
+                  window.HKTAuth ? window.HKTAuth.getAuthHeaders() : {}
+                );
+                fetch(API_BASE + "/api/don-thue/cap-nhat-trang-thai/" + id + "?trangThaiMoi=" + encodeURIComponent(st), {
+                  method: "POST",
+                  headers: authHeaders,
+                  body: JSON.stringify({ trangThaiMoi: st })
+                })
+                  .then(function(r) {
+                    if (!r.ok) {
+                      return r.json().then(function(b) {
+                        throw new Error((b && b.message) || ("Lỗi " + r.status));
+                      }).catch(function(e) {
+                        if (e && e.message && e.message.indexOf("JSON") === -1) throw e;
+                        throw new Error("Lỗi " + r.status);
+                      });
+                    }
+                    return r.json().catch(function() { return {}; });
+                  })
+                  .then(function(res) {
+                    alert((res && res.message) || "Cập nhật đơn thành công!");
+                    taiDanhSachDon();
+                  })
+                  .catch(function(err) {
+                    alert("Lỗi khi cập nhật trạng thái đơn: " + (err.message || err));
+                  });
+              }
+            });
+          });
+        }
+
+        document.getElementById("oTimKiemDon").addEventListener("input", function() {
+          renderBangDon(danhSachDon);
+        });
+
+        document.querySelectorAll("#filterStatusGroup button").forEach(function(btn) {
+          btn.addEventListener("click", function() {
+            document.querySelectorAll("#filterStatusGroup button").forEach(function(b) { b.classList.remove("active"); });
+            btn.classList.add("active");
+            locTrangThai = btn.dataset.status;
+            renderBangDon(danhSachDon);
+          });
+        });
+
+        document.getElementById("btnTaiLaiDon").addEventListener("click", taiDanhSachDon);
+
+        taiDanhSachDon();
+      })();
+    </script>
+</body>
+</html>
