@@ -1,8 +1,8 @@
 <?php
 /**
  * thanh_toan.php
- * Trang hiển thị mã QR chuyển khoản (VietQR + ảnh tĩnh dự phòng), đồng hồ đếm ngược 15 phút
- * và nút "Tôi đã chuyển khoản" chuyển đơn sang trạng thái 'Chờ duyệt'
+ * Hiển thị mã VietQR (Tiền thuê + Tiền cọc), đếm ngược 15 phút,
+ * cập nhật trạng thái giữ cọc và liên kết xem Hợp đồng thuê xe số.
  */
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
@@ -33,7 +33,6 @@ if (!$don || ((int) $don['user_id'] !== (int) $user['id'] && !isAdmin())) {
     exit;
 }
 
-// Xử lý khi khách hàng bấm "Tôi đã chuyển khoản" hoặc "Hủy đơn"
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrf()) {
         setFlash('danger', 'Phiên xác thực không hợp lệ, vui lòng thử lại.');
@@ -59,20 +58,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $upd = $pdo->prepare("
             UPDATE don_thue
             SET trang_thai = 'Chờ duyệt',
+                trang_thai_coc = 'Đang giữ cọc',
                 thoi_diem_thanh_toan = NOW()
             WHERE id = ? AND trang_thai = 'Chờ thanh toán'
         ");
         $upd->execute([$donId]);
         dongBoTrangThaiTatCaXe($pdo, (int) $don['xe_may_id']);
 
-        setFlash('success', 'Đã ghi nhận thông báo chuyển khoản cho đơn #DH' . $donId . '! Quản trị viên sẽ kiểm tra và duyệt giao xe cho bạn.');
+        setFlash('success', 'Đã ghi nhận thanh toán (Tiền thuê + Tiền cọc) cho đơn #DH' . $donId . '! Quản trị viên sẽ kiểm tra hồ sơ VNeID/BLX và duyệt giao xe.');
         header('Location: don_cua_toi.php');
         exit;
     }
 
     if ($action === 'huy_don') {
         if (in_array($don['trang_thai'], ['Chờ thanh toán', 'Chờ duyệt'], true)) {
-            $upd = $pdo->prepare("UPDATE don_thue SET trang_thai = 'Đã hủy' WHERE id = ?");
+            $upd = $pdo->prepare("UPDATE don_thue SET trang_thai = 'Đã hủy', trang_thai_coc = 'Chưa thu' WHERE id = ?");
             $upd->execute([$donId]);
             dongBoTrangThaiTatCaXe($pdo, (int) $don['xe_may_id']);
             setFlash('info', 'Đã hủy đơn thuê #DH' . $donId . ' và hoàn trả suất xe về kho.');
@@ -89,6 +89,9 @@ $vietQrUrl = 'https://img.vietqr.io/image/'
     . '?amount=' . $soTienInt
     . '&addInfo=' . rawurlencode($noiDungCk)
     . '&accountName=' . rawurlencode(VIETQR_ACCOUNT_NAME);
+
+$tienCoc    = (float) ($don['tien_coc'] ?? 0);
+$tienThueXe = max(0, (float) $don['tong_tien'] - $tienCoc);
 
 $giayConLai = (int) $don['giay_con_lai'];
 $dangChoThanhToan = ($don['trang_thai'] === 'Chờ thanh toán' && $giayConLai > 0);
@@ -109,7 +112,7 @@ require_once __DIR__ . '/includes/header.php';
 <section class="py-5">
     <div class="container">
         <div class="row">
-            <!-- Cột trái: Mã QR và đồng hồ đếm ngược 15 phút -->
+            <!-- Cột trái: Mã VietQR & Nút xác nhận -->
             <div class="col-lg-6 mb-4">
                 <div class="content-card text-center h-100">
                     <?php if ($dangChoThanhToan): ?>
@@ -128,25 +131,25 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
 
                         <div class="text-left mx-auto mt-3 p-3 rounded" style="max-width:420px;background:#f8fafc;border:1px solid #e2e8f0;">
-                            <div class="d-flex justify-content-between py-1 border-bottom">
+                            <div class="d-flex justify-content-between py-1 border-bottom" style="gap:8px;">
                                 <span class="text-muted small">Ngân hàng thụ hưởng:</span>
-                                <strong>MB Bank (Quân Đội)</strong>
+                                <strong class="text-right"><?= e(tenNganHangVietQr(VIETQR_BANK_ID)) ?></strong>
                             </div>
-                            <div class="d-flex justify-content-between py-1 border-bottom">
+                            <div class="d-flex justify-content-between py-1 border-bottom" style="gap:8px;">
                                 <span class="text-muted small">Số tài khoản:</span>
                                 <code><?= e(VIETQR_ACCOUNT_NO) ?></code>
                             </div>
-                            <div class="d-flex justify-content-between py-1 border-bottom">
+                            <div class="d-flex justify-content-between py-1 border-bottom" style="gap:8px;">
                                 <span class="text-muted small">Chủ tài khoản:</span>
-                                <strong><?= e(VIETQR_ACCOUNT_NAME) ?></strong>
+                                <strong class="text-right"><?= e(VIETQR_ACCOUNT_NAME) ?></strong>
                             </div>
-                            <div class="d-flex justify-content-between py-1 border-bottom">
-                                <span class="text-muted small">Số tiền cần chuyển:</span>
-                                <strong class="text-primary"><?= formatVnd($don['tong_tien']) ?></strong>
+                            <div class="d-flex justify-content-between py-1 border-bottom" style="gap:8px;">
+                                <span class="text-muted small">Tổng tiền cần chuyển (Thuê + Cọc):</span>
+                                <strong class="text-primary price-nowrap"><?= formatVnd($don['tong_tien']) ?></strong>
                             </div>
-                            <div class="d-flex justify-content-between py-1">
+                            <div class="d-flex justify-content-between py-1" style="gap:8px;">
                                 <span class="text-muted small">Nội dung chuyển khoản:</span>
-                                <strong class="text-danger"><?= e($noiDungCk) ?></strong>
+                                <strong class="text-danger text-right"><?= e($noiDungCk) ?></strong>
                             </div>
                         </div>
 
@@ -168,18 +171,29 @@ require_once __DIR__ . '/includes/header.php';
                             <i class="fa-solid fa-circle-info fa-3x text-primary mb-3"></i>
                             <h5 class="font-weight-bold">Trạng thái hiện tại: <span class="text-primary"><?= e($don['trang_thai']) ?></span></h5>
                             <p class="text-muted">Đơn thuê này không còn ở bước chờ quét mã thanh toán ban đầu.</p>
-                            <a href="don_cua_toi.php" class="btn btn-primary font-weight-bold">
-                                <i class="fa-solid fa-rectangle-list mr-1"></i>Xem trong Đơn của tôi
-                            </a>
+                            <div class="d-flex flex-wrap justify-content-center" style="gap: 10px;">
+                                <a href="don_cua_toi.php" class="btn btn-primary font-weight-bold">
+                                    <i class="fa-solid fa-rectangle-list mr-1"></i>Xem trong Đơn của tôi
+                                </a>
+                                <a href="hop_dong.php?id=<?= (int) $don['id'] ?>" target="_blank" class="btn btn-outline-dark font-weight-bold">
+                                    <i class="fa-solid fa-file-contract mr-1"></i>Xem Hợp đồng số
+                                </a>
+                            </div>
                         </div>
                     <?php endif; ?>
                 </div>
             </div>
 
-            <!-- Cột phải: Chi tiết đơn thuê -->
+            <!-- Cột phải: Chi tiết đơn, hồ sơ xác thực & Hợp đồng số -->
             <div class="col-lg-6 mb-4">
                 <div class="content-card h-100">
-                    <h4 class="font-weight-bold text-dark mb-3">Thông tin chi tiết đơn thuê #DH<?= (int) $don['id'] ?></h4>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="font-weight-bold text-dark mb-0">Chi tiết đơn thuê #DH<?= (int) $don['id'] ?></h4>
+                        <a href="hop_dong.php?id=<?= (int) $don['id'] ?>" target="_blank" class="btn btn-sm btn-outline-primary font-weight-bold">
+                            <i class="fa-solid fa-file-contract mr-1"></i>Xem Hợp đồng số
+                        </a>
+                    </div>
+
                     <div class="d-flex align-items-center p-3 rounded mb-3" style="background:#f8fafc;border:1px solid #e6ecf5;">
                         <img src="<?= e($don['hinh_anh'] ?: 'images/car-1.jpg') ?>" alt="<?= e($don['ten_xe']) ?>"
                              style="width:92px;height:66px;object-fit:cover;border-radius:8px;" class="mr-3"
@@ -200,24 +214,28 @@ require_once __DIR__ . '/includes/header.php';
                             <strong><?= e($don['so_dien_thoai']) ?></strong>
                         </div>
                         <div class="d-flex justify-content-between px-3 py-2 border-bottom">
-                            <span class="text-muted">Ngày nhận xe:</span>
-                            <strong><?= date('d/m/Y', strtotime($don['ngay_nhan'])) ?></strong>
+                            <span class="text-muted">Số định danh VNeID / CCCD:</span>
+                            <strong><?= e($don['so_cccd'] ?: 'Chưa cập nhật') ?></strong>
                         </div>
                         <div class="d-flex justify-content-between px-3 py-2 border-bottom">
-                            <span class="text-muted">Ngày trả xe:</span>
-                            <strong><?= date('d/m/Y', strtotime($don['ngay_tra'])) ?></strong>
+                            <span class="text-muted">Số Bằng lái xe (BLX):</span>
+                            <strong><?= e($don['so_blx'] ?: 'Miễn BLX (xe <=50cc)') ?></strong>
                         </div>
                         <div class="d-flex justify-content-between px-3 py-2 border-bottom">
-                            <span class="text-muted">Số ngày thuê:</span>
-                            <strong><?= (int) $don['so_ngay'] ?> ngày &times; <?= formatVnd($don['gia_thue']) ?></strong>
+                            <span class="text-muted">Thời gian thuê:</span>
+                            <strong><?= date('d/m/Y', strtotime($don['ngay_nhan'])) ?> &rarr; <?= date('d/m/Y', strtotime($don['ngay_tra'])) ?> (<?= (int) $don['so_ngay'] ?> ngày)</strong>
                         </div>
                         <div class="d-flex justify-content-between px-3 py-2 border-bottom">
-                            <span class="text-muted">Điểm nhận xe:</span>
-                            <span class="text-right"><?= e($don['diem_nhan']) ?></span>
+                            <span class="text-muted">Điểm nhận / trả xe:</span>
+                            <span class="text-right small"><?= e($don['diem_nhan']) ?><br><span class="text-muted">Trả: <?= e($don['diem_tra']) ?></span></span>
                         </div>
                         <div class="d-flex justify-content-between px-3 py-2 border-bottom">
-                            <span class="text-muted">Điểm trả xe:</span>
-                            <span class="text-right"><?= e($don['diem_tra']) ?></span>
+                            <span class="text-muted">Tiền thuê xe (<?= (int) $don['so_ngay'] ?> ngày &times; <?= formatVnd($don['gia_thue']) ?>):</span>
+                            <strong><?= formatVnd($tienThueXe) ?></strong>
+                        </div>
+                        <div class="d-flex justify-content-between px-3 py-2 border-bottom">
+                            <span class="text-muted">Tiền đặt cọc (giữ 500k phạt nguội 15 ngày):</span>
+                            <strong style="color:#b45309;"><?= formatVnd($tienCoc) ?></strong>
                         </div>
                         <div class="d-flex justify-content-between align-items-center px-3 py-3 bg-light">
                             <strong class="text-dark">Tổng cộng thanh toán:</strong>

@@ -1,8 +1,4 @@
 <?php
-/**
- * includes/admin_header.php
- * Khung giao diện Quản trị dùng chung (Chỉ dành cho vai trò ADMIN)
- */
 $adminUser = requireAdmin($pdo);
 $currentAdminPage = basename($_SERVER['PHP_SELF'] ?? 'index.php');
 $flash = getFlash();
@@ -26,6 +22,60 @@ $navItems = [
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./assets/main-Kuf3cpUe.css">
     <style>
+        :root {
+            --sidebar-width: 250px;
+            --header-height: 60px;
+        }
+        .admin-header {
+            height: var(--header-height);
+            z-index: 1030;
+        }
+        .admin-sidebar {
+            top: var(--header-height);
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            border-right: 1px solid #e9ecef;
+            background: #fff;
+            overflow-y: auto;
+            z-index: 1035;
+        }
+        .admin-main {
+            background-color: #f8f9fa;
+            margin-top: var(--header-height);
+            min-height: calc(100vh - var(--header-height));
+        }
+        @media (min-width: 992px) {
+            .admin-main {
+                margin-left: var(--sidebar-width) !important;
+            }
+        }
+        @media (max-width: 991.98px) {
+            .admin-sidebar {
+                z-index: 1045;
+            }
+            .admin-main {
+                margin-left: 0 !important;
+            }
+        }
+        .admin-sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 1040;
+        }
+        .admin-sidebar-backdrop.show {
+            display: block;
+        }
+        /* Đảm bảo hộp thoại Modal luôn nằm trên lớp phủ backdrop và thanh điều hướng */
+        .modal-backdrop {
+            --bs-backdrop-zindex: 1050;
+            z-index: 1050 !important;
+        }
+        .modal {
+            --bs-modal-zindex: 1060;
+            z-index: 1060 !important;
+        }
         .vehicle-thumb {
             width: 58px;
             height: 42px;
@@ -45,11 +95,20 @@ $navItems = [
             justify-content: center;
             border-radius: 10px;
             font-size: 21px;
+            flex-shrink: 0;
         }
         select.form-select {
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
             padding-top: 6px;
             padding-bottom: 6px;
+            padding-right: 2rem;
             line-height: 1.4;
+            text-overflow: ellipsis;
+        }
+        .price-nowrap {
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -57,17 +116,23 @@ $navItems = [
 <div class="admin-app">
     <div class="admin-wrapper" id="admin-wrapper">
         <header class="admin-header">
-            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-3">
-                <div class="container-fluid p-0">
-                    <a class="navbar-brand d-flex align-items-center text-decoration-none me-3" href="index.php">
-                        <i class="fa-solid fa-motorcycle text-primary fs-3 me-2"></i>
-                        <span class="h4 mb-0 fw-bold text-dark">HKT<span class="text-primary">GO</span></span>
-                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-2 fs-7">
-                            <i class="fa-solid fa-shield-halved me-1"></i>ADMIN
-                        </span>
-                    </a>
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom px-3 h-100">
+                <div class="container-fluid p-0 flex-nowrap">
+                    <div class="d-flex align-items-center min-w-0">
+                        <button type="button" class="btn btn-outline-secondary btn-sm d-lg-none me-2 flex-shrink-0"
+                                id="adminSidebarToggle" aria-label="Mở menu quản trị">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+                        <a class="navbar-brand d-flex align-items-center text-decoration-none me-3 mb-0" href="index.php">
+                            <i class="fa-solid fa-motorcycle text-primary fs-3 me-2"></i>
+                            <span class="h4 mb-0 fw-bold text-dark">HKT<span class="text-primary">GO</span></span>
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-2 fs-7 d-none d-sm-inline-block">
+                                <i class="fa-solid fa-shield-halved me-1"></i>ADMIN
+                            </span>
+                        </a>
+                    </div>
 
-                    <ul class="navbar-nav me-auto d-none d-md-flex flex-row gap-2">
+                    <ul class="navbar-nav me-auto d-none d-xl-flex flex-row gap-2">
                         <li class="nav-item"><a class="nav-link fw-semibold" href="xe.php">Kho xe</a></li>
                         <li class="nav-item"><a class="nav-link fw-semibold" href="don_thue.php">Đơn thuê</a></li>
                         <li class="nav-item"><a class="nav-link fw-semibold" href="thong_ke.php">Doanh thu</a></li>
@@ -78,12 +143,14 @@ $navItems = [
                         </li>
                     </ul>
 
-                    <div class="navbar-nav flex-row align-items-center gap-3">
-                        <span class="small text-muted d-none d-sm-inline">
+                    <div class="navbar-nav flex-row align-items-center gap-2 gap-md-3 ms-auto flex-shrink-0">
+                        <span class="small text-muted d-none d-md-inline-block text-truncate" style="max-width: 280px;"
+                              title="<?= e($adminUser['ho_ten'] . ' (' . $adminUser['email'] . ')') ?>">
                             <i class="fa-solid fa-user-shield text-primary me-1"></i>
-                            <strong><?= e($adminUser['ho_ten']) ?></strong> (<?= e($adminUser['email']) ?>)
+                            <strong><?= e($adminUser['ho_ten']) ?></strong>
+                            <span class="d-none d-lg-inline">(<?= e($adminUser['email']) ?>)</span>
                         </span>
-                        <a href="../dang_xuat.php" class="btn btn-outline-danger btn-sm">
+                        <a href="../dang_xuat.php" class="btn btn-outline-danger btn-sm flex-shrink-0 text-nowrap">
                             <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
                         </a>
                     </div>
@@ -91,7 +158,9 @@ $navItems = [
             </nav>
         </header>
 
-        <aside class="admin-sidebar" style="width: 250px; border-right: 1px solid #e9ecef; background: #fff;">
+        <div class="admin-sidebar-backdrop" id="adminSidebarBackdrop"></div>
+
+        <aside class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-content p-3">
                 <div class="text-uppercase text-muted fw-bold fs-7 mb-2 px-2">Quản trị hệ thống</div>
                 <nav class="sidebar-nav">
@@ -126,7 +195,7 @@ $navItems = [
             </div>
         </aside>
 
-        <main id="main-content" class="admin-main p-4" style="background-color: #f8f9fa; min-height: calc(100vh - 60px);">
+        <main id="main-content" class="admin-main p-3 p-md-4">
             <div class="container-fluid">
                 <?php if ($flash): ?>
                     <div class="alert alert-<?= e($flash['type']) ?> alert-dismissible fade show shadow-sm mb-4" role="alert">

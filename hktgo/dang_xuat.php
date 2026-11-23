@@ -1,8 +1,4 @@
 <?php
-/**
- * dang_xuat.php
- * Xóa toàn bộ phiên đăng nhập PHP Session và đưa về trang chủ index.php
- */
 require_once __DIR__ . '/includes/auth.php';
 
 $_SESSION = [];

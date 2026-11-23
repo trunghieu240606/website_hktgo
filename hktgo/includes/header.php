@@ -1,8 +1,4 @@
 <?php
-/**
- * includes/header.php
- * Đầu trang dùng chung cho phân hệ Khách hàng (Tái sử dụng bộ giao diện HKTGO)
- */
 $currentUser = currentUser($pdo ?? null);
 $currentScript = basename($_SERVER['PHP_SELF'] ?? 'index.php');
 $flash = getFlash();
@@ -109,21 +105,56 @@ $flash = getFlash();
             font-weight: 700;
             color: #1089ff;
         }
-        .badge-stock-ok {
+        .badge-stock-ok,
+        .badge-status-ranh {
+            display: inline-block;
             background: #d1fae5;
             color: #065f46;
             font-weight: 600;
-            padding: 5px 10px;
+            padding: 5px 11px;
             border-radius: 999px;
             font-size: 12px;
+            line-height: 1.3;
+            white-space: nowrap;
         }
-        .badge-stock-out {
+        .badge-stock-out,
+        .badge-status-het,
+        .badge-status-huy {
+            display: inline-block;
             background: #fee2e2;
             color: #991b1b;
             font-weight: 600;
-            padding: 5px 10px;
+            padding: 5px 11px;
             border-radius: 999px;
             font-size: 12px;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+        .badge-status-cho {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            font-weight: 600;
+            padding: 5px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+        .badge-status-thue {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            font-weight: 600;
+            padding: 5px 11px;
+            border-radius: 999px;
+            font-size: 12px;
+            line-height: 1.3;
+            white-space: nowrap;
+        }
+        .price-tag,
+        .price-nowrap {
+            white-space: nowrap;
         }
         .content-card {
             background: #fff;
@@ -132,14 +163,46 @@ $flash = getFlash();
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
             padding: 26px;
         }
-        .content-card .table {
+        /* Ghi đè quy tắc .table { min-width: 1000px !important; padding: 30px 0 } của template Carbook */
+        .table {
             min-width: 0 !important;
             width: 100% !important;
         }
+        .table th,
+        .table td,
+        .table tbody tr td {
+            padding: 0.75rem 0.85rem !important;
+            vertical-align: middle !important;
+        }
+        .table-sm th,
+        .table-sm td,
+        .table.table-sm tbody tr td {
+            padding: 0.5rem 0.75rem !important;
+        }
         select.form-control {
             height: 44px !important;
-            padding: 8px 12px !important;
+            padding: 8px 34px 8px 12px !important;
             line-height: 1.4 !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            background-color: #fff;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23334155' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right 11px center !important;
+            background-size: 14px 10px !important;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        @media (max-width: 991.98px) {
+            #hktNav .navbar-nav {
+                padding-top: 10px;
+                gap: 6px;
+            }
+            .content-card {
+                padding: 18px;
+            }
         }
     </style>
 </head>

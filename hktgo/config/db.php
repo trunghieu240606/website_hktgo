@@ -1,10 +1,4 @@
 <?php
-/**
- * config/db.php
- * Kết nối CSDL MySQL bằng PDO (Chạy trực tiếp trên XAMPP / Laragon)
- * Tích hợp tự động hủy đơn giữ chỗ quá hạn 15 phút & đồng bộ tồn kho xe
- */
-
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 
 define('DB_HOST', '127.0.0.1');
@@ -13,10 +7,25 @@ define('DB_NAME', 'hktgo_db');
 define('DB_USER', 'root');
 define('DB_PASS', '');
 
-// Cấu hình thông tin tài khoản nhận chuyển khoản VietQR của cửa hàng
-define('VIETQR_BANK_ID', 'MB');
-define('VIETQR_ACCOUNT_NO', '0365145525');
+define('VIETQR_BANK_ID', 'VCB');
+define('VIETQR_ACCOUNT_NO', '1051351814');
 define('VIETQR_ACCOUNT_NAME', 'TRAN TRUNG HIEU');
+
+function tenNganHangVietQr(string $bankId): string
+{
+    $map = [
+        'VCB'  => 'Vietcombank (TMCP Ngoại thương VN)',
+        'MB'   => 'MB Bank (Quân Đội)',
+        'TCB'  => 'Techcombank (Kỹ thương VN)',
+        'ICB'  => 'VietinBank (Công thương VN)',
+        'BIDV' => 'BIDV (Đầu tư & Phát triển VN)',
+        'ACB'  => 'ACB (Á Châu)',
+        'VPB'  => 'VPBank (Việt Nam Thịnh Vượng)',
+        'TPB'  => 'TPBank (Tiên Phong)',
+    ];
+    $key = strtoupper(trim($bankId));
+    return $map[$key] ?? $key;
+}
 
 try {
     $dsn = 'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=utf8mb4';
@@ -33,11 +42,6 @@ try {
         . '</div>');
 }
 
-/**
- * Tự động hủy các đơn ở trạng thái 'Chờ thanh toán' đã quá hạn 15 phút
- * và đồng bộ lại cột trang_thai ('Đang rảnh' / 'Hết xe') của bảng xe_may.
- * Hàm chạy tự động mỗi khi có người mở trang, không cần cài đặt Cronjob.
- */
 function tuDongHuyDonQuaHanVaDongBoKho(PDO $pdo): void
 {
     $stmt = $pdo->prepare("
@@ -54,10 +58,7 @@ function tuDongHuyDonQuaHanVaDongBoKho(PDO $pdo): void
     }
 }
 
-/**
- * Đồng bộ cột trang_thai ('Đang rảnh' hoặc 'Hết xe') cho 1 mẫu xe hoặc toàn bộ kho xe
- * dựa trên công thức: so_luong_con_lai = so_luong - số đơn đang giữ xe.
- */
+
 function dongBoTrangThaiTatCaXe(PDO $pdo, ?int $xeId = null): void
 {
     $sql = "
@@ -82,10 +83,6 @@ function dongBoTrangThaiTatCaXe(PDO $pdo, ?int $xeId = null): void
     }
 }
 
-/**
- * Tính số lượng còn lại khả dụng của một mẫu xe.
- * Khi $lockForUpdate = true (bên trong Transaction đặt xe), khóa các dòng đơn liên quan để chống Race Condition.
- */
 function tinhSoLuongConLai(PDO $pdo, int $xeId, int $tongSoLuong, bool $lockForUpdate = false): int
 {
     $sql = "
@@ -103,21 +100,15 @@ function tinhSoLuongConLai(PDO $pdo, int $xeId, int $tongSoLuong, bool $lockForU
     return max(0, $tongSoLuong - $dangGiu);
 }
 
-/**
- * Định dạng số tiền VNĐ hiển thị trên giao diện.
- */
 function formatVnd($amount): string
 {
-    return number_format((float) $amount, 0, ',', '.') . ' ₫';
+    return number_format((float) $amount, 0, ',', '.') . "\u{00A0}₫";
 }
 
-/**
- * Escape chuỗi an toàn chống XSS khi in ra HTML.
- */
+
 function e(?string $val): string
 {
     return htmlspecialchars((string) $val, ENT_QUOTES, 'UTF-8');
 }
 
-// Tự động giải phóng các đơn giữ chỗ quá hạn 15 phút ngay khi nạp trang
 tuDongHuyDonQuaHanVaDongBoKho($pdo);

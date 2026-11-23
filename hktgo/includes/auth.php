@@ -1,17 +1,9 @@
 <?php
-/**
- * includes/auth.php
- * Quản lý phiên đăng nhập PHP Session ($_SESSION) và kiểm tra quyền (ADMIN / USER)
- */
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/**
- * Lấy đường dẫn gốc tương đối để liên kết giữa thư mục gốc và thư mục /admin/ luôn đúng
- * dù đặt thư mục trong htdocs/hktgo hay chạy trực tiếp ở cổng local.
- */
 function baseUrl(string $path = ''): string
 {
     $isInAdmin = (basename(dirname($_SERVER['SCRIPT_FILENAME'] ?? '')) === 'admin');
@@ -19,10 +11,6 @@ function baseUrl(string $path = ''): string
     return $prefix . ltrim($path, '/');
 }
 
-/**
- * Trả về mảng thông tin người dùng đang đăng nhập trong Session (hoặc null nếu khách vãng lai).
- * Luôn đối chiếu lại vai_tro mới nhất từ CSDL nếu có $pdo để phản ánh tức thì khi Admin đổi quyền (Set Role).
- */
 function currentUser(?PDO $pdo = null): ?array
 {
     if (empty($_SESSION['user']) || empty($_SESSION['user']['id'])) {
@@ -30,7 +18,7 @@ function currentUser(?PDO $pdo = null): ?array
     }
 
     if ($pdo !== null) {
-        $stmt = $pdo->prepare("SELECT id, ho_ten, email, sdt, vai_tro FROM users WHERE id = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT id, ho_ten, email, sdt, vai_tro, trang_thai FROM users WHERE id = ? LIMIT 1");
         $stmt->execute([$_SESSION['user']['id']]);
         $fresh = $stmt->fetch();
         if (!$fresh) {
@@ -53,13 +41,18 @@ function isAdmin(): bool
     return isLoggedIn() && strtoupper($_SESSION['user']['vai_tro'] ?? '') === 'ADMIN';
 }
 
-/**
- * Bắt buộc người dùng phải đăng nhập mới được truy cập trang (VD: dat_xe.php, thanh_toan.php, don_cua_toi.php).
- */
+
 function requireLogin(PDO $pdo): array
 {
     $user = currentUser($pdo);
     if (!$user) {
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && !empty($_SERVER['REQUEST_URI'])) {
+            $reqFile = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '');
+            $query   = parse_url($_SERVER['REQUEST_URI'], PHP_URL_QUERY);
+            if ($reqFile !== '' && $reqFile !== 'dang_nhap.php' && $reqFile !== 'dang_ky.php') {
+                $_SESSION['redirect_after_login'] = $reqFile . ($query ? '?' . $query : '');
+            }
+        }
         setFlash('warning', 'Vui lòng đăng nhập tài khoản để thực hiện chức năng này!');
         header('Location: ' . baseUrl('dang_nhap.php'));
         exit;
@@ -67,9 +60,7 @@ function requireLogin(PDO $pdo): array
     return $user;
 }
 
-/**
- * Bắt buộc tài khoản có vai trò ADMIN mới được vào khu vực /admin/*.php.
- */
+
 function requireAdmin(PDO $pdo): array
 {
     $user = currentUser($pdo);
@@ -86,9 +77,7 @@ function requireAdmin(PDO $pdo): array
     return $user;
 }
 
-/**
- * Sinh và kiểm tra CSRF Token chống giả mạo biểu mẫu POST.
- */
+
 function csrfToken(): string
 {
     if (empty($_SESSION['csrf_token'])) {
@@ -103,9 +92,7 @@ function verifyCsrf(): bool
     return !empty($token) && !empty($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
 
-/**
- * Lưu và hiển thị thông báo Flash Message qua Session.
- */
+
 function setFlash(string $type, string $message): void
 {
     $_SESSION['flash'] = ['type' => $type, 'message' => $message];
@@ -121,9 +108,7 @@ function getFlash(): ?array
     return null;
 }
 
-/**
- * Chuẩn hóa số điện thoại Việt Nam về 10 chữ số bắt đầu bằng 0.
- */
+
 function normalizePhone(string $raw): string
 {
     $d = preg_replace('/[\s.\-]/', '', trim($raw));

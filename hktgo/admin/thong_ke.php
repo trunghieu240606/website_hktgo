@@ -1,17 +1,13 @@
 <?php
-/**
- * admin/thong_ke.php
- * Báo cáo & Thống kê Doanh thu theo Ngày và theo Tháng (Truy vấn SQL GROUP BY đơn giản, minh bạch)
- * Chỉ tổng hợp các đơn có trạng thái 'Hoàn thành'
- */
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 $adminUser = requireAdmin($pdo);
 
-// 1. Các chỉ số tổng hợp nhanh
+$exprDoanhThu = "GREATEST(0, tong_tien - COALESCE(tien_coc, 0)) + COALESCE(phi_qua_han, 0)";
+
 $tongDoanhThu = (float) $pdo->query("
-    SELECT COALESCE(SUM(tong_tien), 0)
+    SELECT COALESCE(SUM($exprDoanhThu), 0)
     FROM don_thue
     WHERE trang_thai = 'Hoàn thành'
 ")->fetchColumn();
@@ -23,7 +19,7 @@ $soDonHoanThanh = (int) $pdo->query("
 ")->fetchColumn();
 
 $doanhThuThangNay = (float) $pdo->query("
-    SELECT COALESCE(SUM(tong_tien), 0)
+    SELECT COALESCE(SUM($exprDoanhThu), 0)
     FROM don_thue
     WHERE trang_thai = 'Hoàn thành'
       AND YEAR(ngay_nhan) = YEAR(CURDATE())
@@ -31,17 +27,16 @@ $doanhThuThangNay = (float) $pdo->query("
 ")->fetchColumn();
 
 $doanhThuTamTinhDangThue = (float) $pdo->query("
-    SELECT COALESCE(SUM(tong_tien), 0)
+    SELECT COALESCE(SUM(GREATEST(0, tong_tien - COALESCE(tien_coc, 0))), 0)
     FROM don_thue
     WHERE trang_thai IN ('Chờ duyệt', 'Đang thuê')
 ")->fetchColumn();
 
-// 2. Bảng thống kê doanh thu theo Ngày (14 ngày phát sinh gần nhất)
 $theoNgay = $pdo->query("
     SELECT ngay_nhan AS ngay,
            COUNT(*) AS so_don,
            SUM(so_ngay) AS tong_ngay_thue,
-           SUM(tong_tien) AS doanh_thu
+           SUM($exprDoanhThu) AS doanh_thu
     FROM don_thue
     WHERE trang_thai = 'Hoàn thành'
     GROUP BY ngay_nhan
@@ -49,14 +44,13 @@ $theoNgay = $pdo->query("
     LIMIT 14
 ")->fetchAll();
 
-// 3. Bảng thống kê doanh thu theo Tháng (12 tháng gần nhất)
 $theoThang = $pdo->query("
     SELECT DATE_FORMAT(ngay_nhan, '%m/%Y') AS thang_nam,
            YEAR(ngay_nhan) AS nam,
            MONTH(ngay_nhan) AS thang,
            COUNT(*) AS so_don,
            SUM(so_ngay) AS tong_ngay_thue,
-           SUM(tong_tien) AS doanh_thu
+           SUM($exprDoanhThu) AS doanh_thu
     FROM don_thue
     WHERE trang_thai = 'Hoàn thành'
     GROUP BY YEAR(ngay_nhan), MONTH(ngay_nhan), DATE_FORMAT(ngay_nhan, '%m/%Y')
@@ -64,11 +58,10 @@ $theoThang = $pdo->query("
     LIMIT 12
 ")->fetchAll();
 
-// 4. Bảng thống kê hiệu suất theo từng mẫu xe
 $theoMauXe = $pdo->query("
     SELECT x.ten_xe, x.hang_xe, x.so_luong,
            COUNT(d.id) AS so_luot_hoan_thanh,
-           COALESCE(SUM(d.tong_tien), 0) AS doanh_thu
+           COALESCE(SUM(GREATEST(0, d.tong_tien - COALESCE(d.tien_coc, 0)) + COALESCE(d.phi_qua_han, 0)), 0) AS doanh_thu
     FROM xe_may x
     LEFT JOIN don_thue d ON d.xe_may_id = x.id AND d.trang_thai = 'Hoàn thành'
     GROUP BY x.id
@@ -81,20 +74,19 @@ require_once __DIR__ . '/../includes/admin_header.php';
 
 <div class="mb-4">
     <h1 class="h3 mb-1 fw-bold text-dark">Thống kê Doanh thu theo Ngày &amp; Tháng</h1>
-    <p class="text-muted mb-0">Số liệu doanh thu thực thu được tổng hợp trực tiếp từ các đơn thuê ở trạng thái <strong>Hoàn thành</strong></p>
+    <p class="text-muted mb-0">Số liệu doanh thu thuê xe thực thu (đã tách khoản tiền đặt cọc tài sản hoàn trả) tổng hợp từ các đơn <strong>Hoàn thành</strong></p>
 </div>
 
-<!-- 4 Thẻ chỉ số tài chính -->
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
+    <div class="col-xl-3 col-sm-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small fw-semibold mb-1">Tổng doanh thu hoàn thành</div>
-                <h3 class="fw-bold text-success mb-0"><?= formatVnd($tongDoanhThu) ?></h3>
+                <h3 class="fw-bold text-success mb-0 price-nowrap"><?= formatVnd($tongDoanhThu) ?></h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-xl-3 col-sm-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small fw-semibold mb-1">Số đơn đã hoàn thành</div>
@@ -102,27 +94,26 @@ require_once __DIR__ . '/../includes/admin_header.php';
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-xl-3 col-sm-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="text-muted small fw-semibold mb-1">Doanh thu trong tháng <?= date('m/Y') ?></div>
-                <h3 class="fw-bold text-dark mb-0"><?= formatVnd($doanhThuThangNay) ?></h3>
+                <h3 class="fw-bold text-dark mb-0 price-nowrap"><?= formatVnd($doanhThuThangNay) ?></h3>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-xl-3 col-sm-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="text-muted small fw-semibold mb-1">Giá trị đơn đang thuê / chờ duyệt</div>
-                <h3 class="fw-bold text-warning mb-0"><?= formatVnd($doanhThuTamTinhDangThue) ?></h3>
+                <div class="text-muted small fw-semibold mb-1">Tiền thuê đơn đang thuê / chờ duyệt</div>
+                <h3 class="fw-bold text-warning mb-0 price-nowrap"><?= formatVnd($doanhThuTamTinhDangThue) ?></h3>
             </div>
         </div>
     </div>
 </div>
 
 <div class="row g-4 mb-4">
-    <!-- Bảng 1: Doanh thu theo Ngày -->
-    <div class="col-lg-6">
+    <div class="col-xl-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white py-3">
                 <h5 class="card-title mb-0 fw-bold">
@@ -162,8 +153,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </div>
     </div>
 
-    <!-- Bảng 2: Doanh thu theo Tháng -->
-    <div class="col-lg-6">
+    <div class="col-xl-6">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-header bg-white py-3">
                 <h5 class="card-title mb-0 fw-bold">
@@ -204,7 +194,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
     </div>
 </div>
 
-<!-- Bảng 3: Doanh thu theo từng Mẫu xe -->
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3">
         <h5 class="card-title mb-0 fw-bold">

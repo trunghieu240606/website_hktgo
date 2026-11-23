@@ -1,8 +1,5 @@
 <?php
-/**
- * dang_ky.php
- * Đăng ký tài khoản Khách hàng mới (vai_tro mặc định = USER, mật khẩu băm Bcrypt)
- */
+
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 
@@ -37,7 +34,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($matKhau !== $nhapLai) {
             $error = 'Mật khẩu xác nhận không khớp.';
         } else {
-            // Kiểm tra trùng Email hoặc Số điện thoại
             $stmtChk = $pdo->prepare("SELECT id, email, sdt FROM users WHERE email = ? OR sdt = ? LIMIT 1");
             $stmtChk->execute([$email, $sdt]);
             $existed = $stmtChk->fetch();
@@ -87,27 +83,27 @@ require_once __DIR__ . '/includes/header.php';
 
                         <div class="form-group">
                             <label class="font-weight-bold small">Họ và tên <span class="text-danger">*</span></label>
-                            <input type="text" name="ho_ten" class="form-control" value="<?= e($hoTen) ?>" placeholder="VD: Nguyễn Văn Minh" required>
+                            <input type="text" name="ho_ten" class="form-control" value="<?= e($hoTen) ?>" required>
                         </div>
 
                         <div class="form-group">
                             <label class="font-weight-bold small">Địa chỉ Email <span class="text-danger">*</span></label>
-                            <input type="email" name="email" class="form-control" value="<?= e($email) ?>" placeholder="VD: khachhang@gmail.com" required>
+                            <input type="email" name="email" class="form-control" value="<?= e($email) ?>" required>
                         </div>
 
                         <div class="form-group">
                             <label class="font-weight-bold small">Số điện thoại (10 số) <span class="text-danger">*</span></label>
-                            <input type="tel" name="sdt" class="form-control" maxlength="10" value="<?= e($sdt) ?>" placeholder="VD: 0912345678" required>
+                            <input type="tel" name="sdt" class="form-control" maxlength="10" value="<?= e($sdt) ?>" required>
                         </div>
 
                         <div class="form-group">
                             <label class="font-weight-bold small">Mật khẩu <span class="text-danger">*</span></label>
-                            <input type="password" name="mat_khau" class="form-control" placeholder="Tối thiểu 6 ký tự" required>
+                            <input type="password" name="mat_khau" class="form-control" required>
                         </div>
 
                         <div class="form-group">
                             <label class="font-weight-bold small">Nhập lại mật khẩu <span class="text-danger">*</span></label>
-                            <input type="password" name="nhap_lai_mat_khau" class="form-control" placeholder="Xác nhận lại mật khẩu" required>
+                            <input type="password" name="nhap_lai_mat_khau" class="form-control" required>
                         </div>
 
                         <button type="submit" class="btn btn-primary btn-block font-weight-bold py-2 mt-3">

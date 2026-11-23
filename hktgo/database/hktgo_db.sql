@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `sdt` VARCHAR(20) NOT NULL UNIQUE,
   `mat_khau` VARCHAR(255) NOT NULL,
   `vai_tro` ENUM('ADMIN', 'USER') NOT NULL DEFAULT 'USER',
+  `trang_thai` ENUM('Hoạt động', 'Bị khóa') NOT NULL DEFAULT 'Hoạt động',
   `ngay_tao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -30,13 +31,14 @@ CREATE TABLE IF NOT EXISTS `danh_muc_xe` (
   `ngay_tao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 3. Bảng xe_may: Thông tin mẫu xe (ten_xe duy nhất) và tổng số lượng tồn kho (so_luong)
+-- 3. Bảng xe_may: Thông tin mẫu xe (ten_xe duy nhất), tiền cọc và tổng số lượng tồn kho (so_luong)
 CREATE TABLE IF NOT EXISTS `xe_may` (
   `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `danh_muc_xe_id` INT UNSIGNED NULL,
   `ten_xe` VARCHAR(150) NOT NULL UNIQUE,
   `hang_xe` VARCHAR(100) NOT NULL DEFAULT 'Honda',
   `gia_thue` DECIMAL(12,0) NOT NULL DEFAULT 150000,
+  `tien_coc` DECIMAL(12,0) NOT NULL DEFAULT 1000000,
   `so_luong` INT NOT NULL DEFAULT 5,
   `trang_thai` VARCHAR(50) NOT NULL DEFAULT 'Đang rảnh',
   `hinh_anh` VARCHAR(255) NULL,
@@ -47,23 +49,33 @@ CREATE TABLE IF NOT EXISTS `xe_may` (
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. Bảng don_thue: Đơn thuê xe, giữ chỗ 15 phút & vòng đời trạng thái
--- (Lưu cố định so_ngay và tong_tien để giữ nguyên mức giá tại thời điểm khách đặt)
+-- 4. Bảng don_thue: Đơn thuê xe, hồ sơ VNeID/BLX, tiền cọc, giữ chỗ 15 phút & vòng đời trạng thái
 CREATE TABLE IF NOT EXISTS `don_thue` (
   `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT UNSIGNED NOT NULL,
   `xe_may_id` INT UNSIGNED NOT NULL,
   `ten_khach_hang` VARCHAR(100) NOT NULL,
   `so_dien_thoai` VARCHAR(20) NOT NULL,
+  `so_cccd` VARCHAR(12) NULL,
+  `anh_vneid` VARCHAR(255) NULL,
+  `so_blx` VARCHAR(20) NULL,
+  `anh_blx` VARCHAR(255) NULL,
+  `da_dong_y_dieu_khoan` TINYINT(1) NOT NULL DEFAULT 1,
   `ngay_nhan` DATE NOT NULL,
   `ngay_tra` DATE NOT NULL,
   `diem_nhan` VARCHAR(255) NOT NULL,
   `diem_tra` VARCHAR(255) NOT NULL,
   `so_ngay` INT NOT NULL DEFAULT 1,
   `tong_tien` DECIMAL(14,0) NOT NULL DEFAULT 0,
+  `tien_coc` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `phi_qua_han` DECIMAL(12,0) NOT NULL DEFAULT 0,
+  `phi_phat_sinh` DECIMAL(12,0) NOT NULL DEFAULT 0,
   `trang_thai` ENUM('Chờ thanh toán', 'Chờ duyệt', 'Đang thuê', 'Hoàn thành', 'Đã hủy') NOT NULL DEFAULT 'Chờ thanh toán',
+  `trang_thai_coc` ENUM('Chưa thu', 'Đang giữ cọc', 'Giữ cọc phạt nguội 15 ngày', 'Đã hoàn đủ', 'Đã khấu trừ phạt') NOT NULL DEFAULT 'Chưa thu',
   `han_thanh_toan` DATETIME NULL,
   `thoi_diem_thanh_toan` DATETIME NULL,
+  `han_hoan_coc` DATETIME NULL,
+  `ghi_chu_su_co` TEXT NULL,
   `ngay_tao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX `idx_don_user` (`user_id`),
   INDEX `idx_don_xe` (`xe_may_id`),
@@ -100,15 +112,16 @@ ON DUPLICATE KEY UPDATE
   `mo_ta` = VALUES(`mo_ta`),
   `thu_tu` = VALUES(`thu_tu`);
 
-INSERT INTO `xe_may` (`id`, `danh_muc_xe_id`, `ten_xe`, `hang_xe`, `gia_thue`, `so_luong`, `trang_thai`, `hinh_anh`) VALUES
-(1, 1, 'Honda Vision 2024', 'Honda', 150000, 5, 'Đang rảnh', 'images/car-2.jpg'),
-(2, 2, 'Honda Future 125 FI', 'Honda', 140000, 5, 'Đang rảnh', 'images/car-5.jpg'),
-(3, 2, 'Honda Wave Alpha', 'Honda', 120000, 6, 'Đang rảnh', 'images/car-1.jpg'),
-(4, 1, 'Honda Vario 160', 'Honda', 180000, 4, 'Đang rảnh', 'images/car-3.jpg'),
-(5, 3, 'Yamaha Exciter 155 VVA', 'Yamaha', 200000, 4, 'Đang rảnh', 'images/car-4.jpg'),
-(6, 1, 'Honda SH 150i ABS', 'Honda', 350000, 3, 'Đang rảnh', 'images/car-7.jpg')
+INSERT INTO `xe_may` (`id`, `danh_muc_xe_id`, `ten_xe`, `hang_xe`, `gia_thue`, `tien_coc`, `so_luong`, `trang_thai`, `hinh_anh`) VALUES
+(1, 1, 'Honda Vision 2024', 'Honda', 150000, 2000000, 5, 'Đang rảnh', 'images/car-2.jpg'),
+(2, 2, 'Honda Future 125 FI', 'Honda', 140000, 1000000, 5, 'Đang rảnh', 'images/car-5.jpg'),
+(3, 2, 'Honda Wave Alpha', 'Honda', 120000, 1000000, 6, 'Đang rảnh', 'images/car-1.jpg'),
+(4, 1, 'Honda Vario 160', 'Honda', 180000, 2000000, 4, 'Đang rảnh', 'images/car-3.jpg'),
+(5, 3, 'Yamaha Exciter 155 VVA', 'Yamaha', 200000, 2000000, 4, 'Đang rảnh', 'images/car-4.jpg'),
+(6, 1, 'Honda SH 150i ABS', 'Honda', 350000, 3000000, 3, 'Đang rảnh', 'images/car-7.jpg')
 ON DUPLICATE KEY UPDATE
   `gia_thue` = VALUES(`gia_thue`),
+  `tien_coc` = VALUES(`tien_coc`),
   `so_luong` = VALUES(`so_luong`),
   `hinh_anh` = VALUES(`hinh_anh`);
 

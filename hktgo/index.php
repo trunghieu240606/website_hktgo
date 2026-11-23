@@ -155,15 +155,18 @@ require_once __DIR__ . '/includes/header.php';
     }
 
     /* =====================================================================
-       SHOWCASE ACCORDION XE MÁY (ĐÚNG PHONG CÁCH ẢNH MẪU, DỮ LIỆU HKTGO)
+       SHOWCASE ACCORDION XE MÁY (KHÔNG TRÀN NGANG, KHÔNG CHỒNG ĐÈ CHỮ/ẢNH)
        ===================================================================== */
     .hkt-showcase-wrapper {
         display: flex;
         gap: 10px;
         align-items: stretch;
-        min-height: 505px;
-        overflow-x: auto;
+        min-height: 500px;
+        overflow-x: hidden;
         padding: 6px 2px 10px;
+    }
+    .hkt-showcase-wrapper.is-many {
+        overflow-x: auto;
     }
     .hkt-showcase-card {
         background: #ffffff;
@@ -172,13 +175,13 @@ require_once __DIR__ . '/includes/header.php';
         overflow: hidden;
         position: relative;
         cursor: pointer;
-        flex: 1 1 95px;
-        min-width: 92px;
+        flex: 1 1 108px;
+        min-width: 98px;
         display: flex;
         flex-direction: column;
-        transition: flex 0.42s cubic-bezier(0.25, 0.8, 0.25, 1),
-                    border-color 0.3s ease,
-                    box-shadow 0.3s ease;
+        transition: flex 0.38s cubic-bezier(0.25, 0.8, 0.25, 1),
+                    border-color 0.25s ease,
+                    box-shadow 0.25s ease;
         box-shadow: 0 8px 24px rgba(20, 20, 20, 0.04);
     }
     .hkt-showcase-card:hover:not(.is-active) {
@@ -186,8 +189,8 @@ require_once __DIR__ . '/includes/header.php';
         box-shadow: 0 12px 28px rgba(168, 132, 20, 0.12);
     }
     .hkt-showcase-card.is-active {
-        flex: 4.8 1 480px;
-        min-width: 460px;
+        flex: 4.5 1 440px;
+        min-width: 420px;
         border: 2px solid #e2c044;
         cursor: default;
         box-shadow: 0 16px 38px rgba(166, 134, 24, 0.14);
@@ -205,37 +208,43 @@ require_once __DIR__ . '/includes/header.php';
     }
     .sc-compact-img-wrap {
         flex: 1;
-        min-height: 315px;
+        min-height: 255px;
         background: #ffffff;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
         position: relative;
-        padding: 14px 6px 6px;
+        padding: 40px 8px 10px;
     }
     .sc-compact-img-wrap img {
-        width: 165%;
-        max-width: none;
-        height: 290px;
+        width: 100%;
+        max-width: 100%;
+        height: 185px;
         object-fit: contain;
-        object-position: left center;
-        transition: transform 0.35s ease;
+        object-position: center;
+        transition: transform 0.3s ease;
     }
     .hkt-showcase-card:hover .sc-compact-img-wrap img {
-        transform: scale(1.05);
+        transform: scale(1.04);
     }
     .sc-compact-stock-dot {
         position: absolute;
-        top: 12px;
-        left: 12px;
-        font-size: 11px;
+        top: 10px;
+        left: 8px;
+        right: 8px;
+        font-size: 10.5px;
         font-weight: 700;
-        padding: 3px 9px;
+        padding: 3px 6px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid #e5e7eb;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
         color: #065f46;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        z-index: 2;
     }
     .sc-compact-stock-dot.out {
         color: #991b1b;
@@ -244,63 +253,71 @@ require_once __DIR__ . '/includes/header.php';
     }
     .sc-compact-info {
         background: #f9f5eb;
-        padding: 16px 14px 18px;
+        padding: 12px 10px 14px;
         border-top: 1px solid #f0ead8;
     }
     .sc-compact-cat {
-        font-size: 10.5px;
+        font-size: 9.5px;
         font-weight: 700;
-        letter-spacing: 0.4px;
+        letter-spacing: 0.2px;
         color: #9a7b1c;
         text-transform: uppercase;
-        margin-bottom: 4px;
-        white-space: nowrap;
+        line-height: 1.25;
+        margin-bottom: 3px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
     }
     .sc-compact-brand {
-        font-size: 10.5px;
+        font-size: 10px;
         font-weight: 600;
-        color: #8c8c8c;
+        color: #78716c;
         text-transform: uppercase;
         line-height: 1.2;
     }
     .sc-compact-name {
-        font-size: 14.5px;
+        font-size: 12.5px;
         font-weight: 800;
         color: #18181b;
         line-height: 1.25;
         margin-top: 2px;
-        white-space: nowrap;
+        min-height: 32px;
+        word-break: break-word;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
         overflow: hidden;
-        text-overflow: ellipsis;
     }
     .sc-compact-bar {
-        width: 24px;
+        width: 22px;
         height: 2.5px;
         background: #e5b80b;
-        margin: 10px 0 8px;
+        margin: 8px 0 6px;
         border-radius: 2px;
     }
     .sc-compact-price {
-        font-size: 17px;
+        font-size: 14px;
         font-weight: 800;
         color: #8d6e11;
         line-height: 1.2;
+        white-space: nowrap;
     }
     .sc-compact-price small {
-        font-size: 11.5px;
+        display: block;
+        font-size: 10.5px;
         font-weight: 500;
-        color: #9ca3af;
+        color: #78716c;
+        margin-top: 1px;
     }
 
-    /* Trạng thái mở rộng (thẻ lớn bên phải) */
+    /* Trạng thái mở rộng (thẻ lớn) */
     .sc-expanded {
         display: none;
         height: 100%;
         width: 100%;
         position: relative;
-        padding: 30px 30px 28px 34px;
+        padding: 26px 26px 26px 30px;
         background: #ffffff;
         z-index: 1;
     }
@@ -311,17 +328,21 @@ require_once __DIR__ . '/includes/header.php';
     }
     .sc-watermark {
         position: absolute;
-        left: 24px;
-        bottom: -14px;
-        font-size: 96px;
+        right: 16px;
+        left: auto;
+        bottom: 10px;
+        font-size: 62px;
         font-weight: 900;
-        letter-spacing: 3px;
-        color: rgba(214, 203, 178, 0.24);
+        letter-spacing: 2px;
+        color: rgba(214, 203, 178, 0.20);
         line-height: 1;
         pointer-events: none;
         user-select: none;
         z-index: 0;
         white-space: nowrap;
+        max-width: 46%;
+        overflow: hidden;
+        text-align: right;
     }
     .sc-exp-left {
         width: 56%;
@@ -340,52 +361,53 @@ require_once __DIR__ . '/includes/header.php';
     }
     .sc-exp-right img {
         width: 100%;
-        max-height: 330px;
+        max-height: 310px;
         object-fit: contain;
         filter: drop-shadow(0 16px 22px rgba(0, 0, 0, 0.12));
     }
     .sc-pill-badge {
         display: inline-block;
-        padding: 4px 13px;
+        padding: 4px 12px;
         border-radius: 999px;
         border: 1px solid #d6c79c;
         background: #fdfbf5;
         color: #57481c;
         font-size: 11px;
         font-weight: 700;
-        letter-spacing: 0.6px;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
-        margin-bottom: 12px;
+        white-space: nowrap;
     }
     .sc-exp-title {
-        font-size: 29px;
+        font-size: 25px;
         font-weight: 800;
         color: #141414;
-        line-height: 1.18;
-        margin-bottom: 10px;
+        line-height: 1.22;
+        margin-bottom: 8px;
         letter-spacing: -0.3px;
     }
     .sc-exp-desc {
-        font-size: 13.8px;
+        font-size: 13.5px;
         color: #6b7280;
         line-height: 1.55;
-        margin-bottom: 18px;
+        min-height: 64px;
+        margin-bottom: 16px;
     }
     .sc-perks-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 10px;
-        margin-bottom: 20px;
+        margin-bottom: 18px;
     }
     .sc-perk-box {
         background: #f7f2e4;
         border: 1px solid #ede4cc;
         border-radius: 10px;
-        padding: 9px 14px;
+        padding: 9px 12px;
     }
     .sc-perk-box strong {
         display: block;
-        font-size: 14.5px;
+        font-size: 14px;
         font-weight: 800;
         color: #856404;
         line-height: 1.2;
@@ -402,10 +424,11 @@ require_once __DIR__ . '/includes/header.php';
         margin-bottom: 4px;
     }
     .sc-exp-price {
-        font-size: 31px;
+        font-size: 29px;
         font-weight: 800;
         color: #111827;
         letter-spacing: -0.5px;
+        white-space: nowrap;
     }
     .sc-exp-price small {
         font-size: 14px;
@@ -414,12 +437,14 @@ require_once __DIR__ . '/includes/header.php';
     }
     .sc-exp-note {
         font-size: 12px;
-        color: #9ca3af;
-        margin-bottom: 18px;
+        color: #6b7280;
+        margin-bottom: 16px;
     }
     .sc-exp-actions {
         display: flex;
         align-items: center;
+        position: relative;
+        z-index: 3;
     }
     .sc-btn-book {
         height: 46px;
@@ -445,10 +470,37 @@ require_once __DIR__ . '/includes/header.php';
         transform: translateY(-2px);
     }
 
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+        .hkt-showcase-wrapper {
+            gap: 8px;
+        }
+        .hkt-showcase-card {
+            flex: 1 1 86px;
+            min-width: 80px;
+        }
+        .hkt-showcase-card.is-active {
+            flex: 4.2 1 390px;
+            min-width: 380px;
+        }
+        .sc-compact-info {
+            padding: 10px 7px 12px;
+        }
+        .sc-compact-price {
+            font-size: 13px;
+        }
+        .sc-expanded {
+            padding: 22px 20px 22px 24px;
+        }
+        .sc-exp-title {
+            font-size: 22px;
+        }
+    }
+
     @media (max-width: 991.98px) {
         .hkt-showcase-wrapper {
             flex-direction: column;
             min-height: 0;
+            overflow-x: visible;
         }
         .hkt-showcase-card,
         .hkt-showcase-card.is-active {
@@ -458,36 +510,61 @@ require_once __DIR__ . '/includes/header.php';
         }
         .sc-compact {
             flex-direction: row;
-            align-items: center;
+            align-items: stretch;
         }
         .sc-compact-img-wrap {
-            min-height: 120px;
-            width: 40%;
-            padding: 8px;
+            min-height: 135px;
+            width: 38%;
+            padding: 36px 8px 8px;
         }
         .sc-compact-img-wrap img {
             width: 100%;
-            height: 105px;
+            height: 92px;
             object-position: center;
         }
+        .sc-compact-stock-dot {
+            top: 8px;
+            left: 8px;
+            right: auto;
+            max-width: calc(100% - 16px);
+        }
         .sc-compact-info {
-            width: 60%;
+            width: 62%;
+            padding: 14px 16px;
             border-top: none;
             border-left: 1px solid #f0ead8;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .sc-compact-name {
+            min-height: 0;
+            font-size: 15px;
+        }
+        .sc-compact-price small {
+            display: inline;
+            margin-left: 2px;
         }
         .hkt-showcase-card.is-active .sc-expanded {
             flex-direction: column-reverse;
-            padding: 22px;
+            padding: 22px 18px;
         }
         .sc-exp-left, .sc-exp-right {
             width: 100%;
             padding-right: 0;
         }
+        .sc-exp-desc {
+            min-height: 0;
+        }
         .sc-exp-right {
             margin-bottom: 16px;
         }
         .sc-watermark {
-            font-size: 56px;
+            font-size: 48px;
+            max-width: 80%;
+            top: 14px;
+            bottom: auto;
+            right: 16px;
         }
     }
 
@@ -638,12 +715,12 @@ require_once __DIR__ . '/includes/header.php';
                         <option value="het_xe" <?= $trangThai === 'het_xe' ? 'selected' : '' ?>>Tạm hết xe</option>
                     </select>
                 </div>
-                <div class="col-md-2 d-flex">
-                    <button type="submit" class="btn btn-dark btn-block font-weight-bold mr-1" style="height:44px;">
-                        <i class="fa-solid fa-magnifying-glass mr-1"></i>
+                <div class="col-md-2 d-flex" style="gap: 6px;">
+                    <button type="submit" class="btn btn-dark font-weight-bold flex-grow-1" style="height:44px;" title="Tìm kiếm">
+                        <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
                     <?php if ($dangLoc): ?>
-                        <a href="index.php#dan-xe" class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center" style="height:44px;" title="Xóa bộ lọc">
+                        <a href="index.php#dan-xe" class="btn btn-outline-secondary d-inline-flex align-items-center justify-content-center" style="height:44px;min-width:44px;" title="Xóa bộ lọc">
                             <i class="fa-solid fa-rotate-left"></i>
                         </a>
                     <?php endif; ?>
@@ -659,7 +736,7 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         <?php else: ?>
             <!-- Dàn thẻ xe kiểu Horizontal Accordion Showcase -->
-            <div class="hkt-showcase-wrapper" id="hktShowcase">
+            <div class="hkt-showcase-wrapper <?= count($dsXe) > 6 ? 'is-many' : '' ?>" id="hktShowcase">
                 <?php foreach ($dsXe as $idx => $xe):
                     $conLai  = (int) $xe['con_lai'];
                     $soLuong = (int) $xe['so_luong'];

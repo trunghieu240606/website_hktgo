@@ -1,16 +1,9 @@
 <?php
-/**
- * admin/xe.php
- * Quản lý Kho xe máy (Thêm mới, Cập nhật, Xóa xe & Upload ảnh đại diện)
- * - Chống trùng tên mẫu xe (ten_xe là duy nhất; muốn nhập thêm đầu xe cùng mẫu thì tăng so_luong)
- * - Chặn giảm tổng số lượng (so_luong) xuống thấp hơn số đơn đang giữ xe của mẫu đó
- */
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 $adminUser = requireAdmin($pdo);
 
-// Xử lý các thao tác POST: Thêm / Cập nhật / Xóa mẫu xe
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!verifyCsrf()) {
         setFlash('danger', 'Phiên xác thực không hợp lệ.');
@@ -22,7 +15,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete') {
         $id = (int) ($_POST['id'] ?? 0);
-        // Kiểm tra xe đã có đơn thuê tham chiếu chưa để bảo vệ toàn vẹn dữ liệu lịch sử
         $stmtRef = $pdo->prepare("SELECT COUNT(*) FROM don_thue WHERE xe_may_id = ?");
         $stmtRef->execute([$id]);
         if ((int) $stmtRef->fetchColumn() > 0) {
@@ -42,6 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hangXe      = trim($_POST['hang_xe'] ?? 'Honda');
         $danhMucId   = (int) ($_POST['danh_muc_xe_id'] ?? 0);
         $giaThue     = (float) ($_POST['gia_thue'] ?? 0);
+        $tienCoc     = max(0, (float) ($_POST['tien_coc'] ?? 1000000));
         $soLuong     = (int) ($_POST['so_luong'] ?? 1);
         $hinhAnhText = trim($_POST['hinh_anh_text'] ?? '');
 
@@ -52,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // 1. Kiểm tra chống trùng tên mẫu xe (ten_xe UNIQUE)
         $stmtDup = $pdo->prepare("SELECT id, ten_xe FROM xe_may WHERE LOWER(ten_xe) = LOWER(?) AND id <> ? LIMIT 1");
         $stmtDup->execute([$tenXe, $id]);
         if ($dupRow = $stmtDup->fetch()) {
@@ -60,8 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: xe.php' . ($action === 'update' ? '?edit=' . $id : ''));
             exit;
         }
-
-        // 2. Khi cập nhật: chặn giảm so_luong xuống thấp hơn số đơn đang giữ xe của mẫu đó
+        
         if ($action === 'update') {
             $stmtHold = $pdo->prepare("
                 SELECT COUNT(*) FROM don_thue
@@ -78,7 +69,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // 3. Xử lý tải tệp ảnh lên nếu quản trị viên chọn file
         $hinhAnhPath = $hinhAnhText !== '' ? $hinhAnhText : 'images/car-1.jpg';
         if (!empty($_FILES['hinh_anh_file']['name']) && $_FILES['hinh_anh_file']['error'] === UPLOAD_ERR_OK) {
             $ext = strtolower(pathinfo($_FILES['hinh_anh_file']['name'], PATHINFO_EXTENSION));
@@ -102,21 +92,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($action === 'create') {
             $ins = $pdo->prepare("
-                INSERT INTO xe_may (danh_muc_xe_id, ten_xe, hang_xe, gia_thue, so_luong, trang_thai, hinh_anh)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO xe_may (danh_muc_xe_id, ten_xe, hang_xe, gia_thue, tien_coc, so_luong, trang_thai, hinh_anh)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $ttBanDau = $soLuong > 0 ? 'Đang rảnh' : 'Hết xe';
-            $ins->execute([$dmParam, $tenXe, $hangXe, $giaThue, $soLuong, $ttBanDau, $hinhAnhPath]);
+            $ins->execute([$dmParam, $tenXe, $hangXe, $giaThue, $tienCoc, $soLuong, $ttBanDau, $hinhAnhPath]);
             $newXeId = (int) $pdo->lastInsertId();
             dongBoTrangThaiTatCaXe($pdo, $newXeId);
             setFlash('success', 'Đã thêm mẫu xe mới "' . $tenXe . '" vào kho thành công.');
         } else {
             $upd = $pdo->prepare("
                 UPDATE xe_may
-                SET danh_muc_xe_id = ?, ten_xe = ?, hang_xe = ?, gia_thue = ?, so_luong = ?, hinh_anh = ?
+                SET danh_muc_xe_id = ?, ten_xe = ?, hang_xe = ?, gia_thue = ?, tien_coc = ?, so_luong = ?, hinh_anh = ?
                 WHERE id = ?
             ");
-            $upd->execute([$dmParam, $tenXe, $hangXe, $giaThue, $soLuong, $hinhAnhPath, $id]);
+            $upd->execute([$dmParam, $tenXe, $hangXe, $giaThue, $tienCoc, $soLuong, $hinhAnhPath, $id]);
             dongBoTrangThaiTatCaXe($pdo, $id);
             setFlash('success', 'Đã cập nhật thông tin mẫu xe #' . $id . ' thành công.');
         }
@@ -128,7 +118,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $dsDanhMuc = $pdo->query("SELECT id, ten FROM danh_muc_xe ORDER BY thu_tu ASC, ten ASC")->fetchAll();
 
-// Nếu bấm Sửa thì nạp dữ liệu mẫu xe cần sửa lên biểu mẫu
 $xeSua = null;
 if (isset($_GET['edit'])) {
     $stmtEdit = $pdo->prepare("SELECT * FROM xe_may WHERE id = ? LIMIT 1");
@@ -163,8 +152,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
 </div>
 
 <div class="row g-4">
-    <!-- Biểu mẫu Thêm / Sửa mẫu xe -->
-    <div class="col-lg-4">
+    <div class="col-xl-4">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <h5 class="card-title mb-0 fw-bold">
@@ -190,12 +178,12 @@ require_once __DIR__ . '/../includes/admin_header.php';
                     </div>
 
                     <div class="row g-2 mb-3">
-                        <div class="col-6">
+                        <div class="col-sm-6">
                             <label class="form-label fw-semibold small">Hãng sản xuất <span class="text-danger">*</span></label>
                             <input type="text" name="hang_xe" class="form-control" required
                                    value="<?= e($xeSua['hang_xe'] ?? 'Honda') ?>" placeholder="Honda, Yamaha...">
                         </div>
-                        <div class="col-6">
+                        <div class="col-sm-6">
                             <label class="form-label fw-semibold small">Danh mục loại xe</label>
                             <select name="danh_muc_xe_id" class="form-select">
                                 <option value="0">-- Chọn loại --</option>
@@ -210,16 +198,22 @@ require_once __DIR__ . '/../includes/admin_header.php';
                     </div>
 
                     <div class="row g-2 mb-3">
-                        <div class="col-7">
+                        <div class="col-sm-7">
                             <label class="form-label fw-semibold small">Giá thuê / ngày (VNĐ) <span class="text-danger">*</span></label>
                             <input type="number" name="gia_thue" class="form-control" min="10000" step="10000" required
                                    value="<?= e((string) ($xeSua['gia_thue'] ?? 150000)) ?>">
                         </div>
-                        <div class="col-5">
+                        <div class="col-sm-5">
                             <label class="form-label fw-semibold small">Tổng số lượng <span class="text-danger">*</span></label>
                             <input type="number" name="so_luong" class="form-control" min="<?= $xeSua ? '0' : '1' ?>" max="200" required
                                    value="<?= e((string) ($xeSua['so_luong'] ?? 5)) ?>">
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Tiền đặt cọc tài sản (VNĐ) <span class="text-danger">*</span></label>
+                        <input type="number" name="tien_coc" class="form-control" min="0" step="100000" required
+                               value="<?= e((string) ($xeSua['tien_coc'] ?? 1000000)) ?>">
                     </div>
 
                     <div class="mb-3">
@@ -246,8 +240,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </div>
     </div>
 
-    <!-- Bảng danh sách kho xe -->
-    <div class="col-lg-8">
+    <div class="col-xl-8">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0 fw-bold">Danh sách mẫu xe trong kho (<?= count($dsXe) ?>)</h5>
@@ -260,7 +253,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
                                 <th class="ps-3">Ảnh</th>
                                 <th>Mẫu xe &amp; Hãng</th>
                                 <th>Danh mục</th>
-                                <th>Đơn giá</th>
+                                <th>Giá thuê &amp; Cọc</th>
                                 <th>Tồn kho thực</th>
                                 <th class="pe-3 text-end">Thao tác</th>
                             </tr>
@@ -283,7 +276,10 @@ require_once __DIR__ . '/../includes/admin_header.php';
                                 <td>
                                     <span class="badge bg-light text-dark border"><?= e($x['ten_danh_muc'] ?? 'Chưa gán') ?></span>
                                 </td>
-                                <td class="fw-semibold text-primary"><?= formatVnd($x['gia_thue']) ?></td>
+                                <td class="price-nowrap">
+                                    <div class="fw-semibold text-primary"><?= formatVnd($x['gia_thue']) ?>/ngày</div>
+                                    <small class="text-muted">Cọc: <?= formatVnd($x['tien_coc'] ?? 1000000) ?></small>
+                                </td>
                                 <td>
                                     <?php if ($conLai > 0): ?>
                                         <span class="badge badge-status-ranh">Còn <?= $conLai ?>/<?= (int) $x['so_luong'] ?> xe</span>
@@ -295,18 +291,20 @@ require_once __DIR__ . '/../includes/admin_header.php';
                                     <?php endif; ?>
                                 </td>
                                 <td class="pe-3 text-end">
-                                    <a href="xe.php?edit=<?= (int) $x['id'] ?>" class="btn btn-sm btn-outline-primary me-1" title="Sửa xe">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </a>
-                                    <form method="POST" action="xe.php" class="d-inline"
-                                          onsubmit="return confirm('Xác nhận xóa mẫu xe <?= e($x['ten_xe']) ?>?');">
-                                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="id" value="<?= (int) $x['id'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa xe">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <a href="xe.php?edit=<?= (int) $x['id'] ?>" class="btn btn-sm btn-outline-primary" title="Sửa xe">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <form method="POST" action="xe.php" class="d-inline"
+                                              onsubmit="return confirm('Xác nhận xóa mẫu xe <?= e($x['ten_xe']) ?>?');">
+                                            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?= (int) $x['id'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa xe">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

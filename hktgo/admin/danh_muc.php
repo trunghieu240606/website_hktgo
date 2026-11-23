@@ -1,8 +1,4 @@
 <?php
-/**
- * admin/danh_muc.php
- * Quản lý Danh mục loại xe (Thêm, Sửa, Xóa danh mục & kiểm tra ràng buộc khóa ngoại)
- */
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 
@@ -94,7 +90,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
 </div>
 
 <div class="row g-4">
-    <div class="col-lg-4">
+    <div class="col-xl-4">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <h5 class="card-title mb-0 fw-bold">
@@ -139,7 +135,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </div>
     </div>
 
-    <div class="col-lg-8">
+    <div class="col-xl-8">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <h5 class="card-title mb-0 fw-bold">Danh sách danh mục hiện có (<?= count($dsDanhMuc) ?>)</h5>
@@ -168,18 +164,20 @@ require_once __DIR__ . '/../includes/admin_header.php';
                                     </span>
                                 </td>
                                 <td class="pe-3 text-end">
-                                    <a href="danh_muc.php?edit=<?= (int) $dm['id'] ?>" class="btn btn-sm btn-outline-primary me-1">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </a>
-                                    <form method="POST" action="danh_muc.php" class="d-inline"
-                                          onsubmit="return confirm('Xác nhận xóa danh mục <?= e($dm['ten']) ?>?');">
-                                        <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
-                                        <input type="hidden" name="action" value="delete">
-                                        <input type="hidden" name="id" value="<?= (int) $dm['id'] ?>">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <a href="danh_muc.php?edit=<?= (int) $dm['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <form method="POST" action="danh_muc.php" class="d-inline"
+                                              onsubmit="return confirm('Xác nhận xóa danh mục <?= e($dm['ten']) ?>?');">
+                                            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="id" value="<?= (int) $dm['id'] ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
