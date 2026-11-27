@@ -1,12 +1,4 @@
 <?php
-/**
- * index.php
- * Trang chủ HKTGO:
- * - Hero Banner + Quy trình 3 bước
- * - Bộ sưu tập xe kiểu Accordion Showcase tương tác (y hệt mẫu thiết kế: thẻ dọc thu gọn + thẻ chi tiết mở rộng
- *   với chữ chìm nền, 4 ô tiện ích 02 Mũ BH / 02 Áo mưa / Giá đỡ ĐT / Baga & dây chằng đồ, giá & xe lấy từ CSDL HKTGO)
- * - Giới thiệu cam kết, Đánh giá khách hàng & Thủ tục thuê xe
- */
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 
@@ -14,14 +6,11 @@ $danhMucId = isset($_GET['danh_muc']) ? (int) $_GET['danh_muc'] : 0;
 $tuKhoa    = trim($_GET['q'] ?? '');
 $trangThai = trim($_GET['trang_thai'] ?? '');
 
-// Lấy danh sách danh mục xe cho bộ lọc
 $dsDanhMuc = $pdo->query("SELECT id, ten FROM danh_muc_xe ORDER BY thu_tu ASC, ten ASC")->fetchAll();
 
-// Số liệu thực tế từ CSDL HKTGO
 $tongDauXeKho = (int) $pdo->query("SELECT COALESCE(SUM(so_luong), 0) FROM xe_may")->fetchColumn();
 $tongMauXeKho = (int) $pdo->query("SELECT COUNT(*) FROM xe_may")->fetchColumn();
 
-// Truy vấn danh sách xe kết hợp đếm số đơn đang giữ xe (Chờ thanh toán, Chờ duyệt, Đang thuê)
 $sql = "
     SELECT x.*, dm.ten AS ten_danh_muc,
            COALESCE(d.dang_giu, 0) AS so_dang_giu,
@@ -61,9 +50,6 @@ $dsXe = $stmt->fetchAll();
 
 $dangLoc = ($danhMucId > 0 || $tuKhoa !== '' || $trangThai !== '');
 
-/**
- * Sinh nhãn phân loại, mô tả đặc trưng và chữ watermark nền cho từng dòng xe trong kho HKTGO
- */
 function thongTinShowcaseXe(array $xe): array
 {
     $dm  = mb_strtolower((string) ($xe['ten_danh_muc'] ?? ''), 'UTF-8');
@@ -84,7 +70,6 @@ function thongTinShowcaseXe(array $xe): array
         $desc = 'Tay ga tự động thời trang, sàn để chân thoáng và cốp rộng — lựa chọn số 1 đi phố & công tác.';
     }
 
-    // Tách tên dòng xe ngắn để hiển thị trên cột thu gọn và làm chữ chìm nền (VD: VISION 2024, EXCITER 155...)
     $shortName = trim(preg_replace('/^' . preg_quote($hang, '/') . '\s+/iu', '', $ten));
     if ($shortName === '') {
         $shortName = $ten;
@@ -106,7 +91,6 @@ function thongTinShowcaseXe(array $xe): array
     ];
 }
 
-// Mặc định mở rộng mẫu xe côn tay nổi bật (hoặc xe đầu tiên còn hàng) giống bố cục mẫu
 $defaultActiveIndex = 0;
 foreach ($dsXe as $idx => $itemXe) {
     if (mb_stripos((string) ($itemXe['ten_danh_muc'] ?? ''), 'côn') !== false && (int) $itemXe['con_lai'] > 0) {
@@ -154,9 +138,6 @@ require_once __DIR__ . '/includes/header.php';
         margin-bottom: 14px;
     }
 
-    /* =====================================================================
-       SHOWCASE ACCORDION XE MÁY (KHÔNG TRÀN NGANG, KHÔNG CHỒNG ĐÈ CHỮ/ẢNH)
-       ===================================================================== */
     .hkt-showcase-wrapper {
         display: flex;
         gap: 10px;
@@ -196,7 +177,6 @@ require_once __DIR__ . '/includes/header.php';
         box-shadow: 0 16px 38px rgba(166, 134, 24, 0.14);
     }
 
-    /* Trạng thái thu gọn (thẻ dọc bên trái) */
     .sc-compact {
         display: flex;
         flex-direction: column;
@@ -311,7 +291,6 @@ require_once __DIR__ . '/includes/header.php';
         margin-top: 1px;
     }
 
-    /* Trạng thái mở rộng (thẻ lớn) */
     .sc-expanded {
         display: none;
         height: 100%;
@@ -611,7 +590,6 @@ require_once __DIR__ . '/includes/header.php';
     }
 </style>
 
-<!-- 1. HERO BANNER NỔI BẬT -->
 <section class="hkt-hero-banner" style="padding: 78px 0 92px;">
     <div class="container">
         <div class="row align-items-center">
@@ -629,7 +607,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<!-- 2. QUY TRÌNH ĐẶT THUÊ XE 3 BƯỚC NHANH GỌN -->
 <section id="quy-trinh" style="margin-top: -46px; position: relative; z-index: 3;" class="pb-3">
     <div class="container">
         <div class="row">
@@ -679,7 +656,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<!-- 3. BỘ SƯU TẬP DÀN XE ACCORDION SHOWCASE -->
 <section id="dan-xe" class="py-5">
     <div class="container">
         <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
@@ -689,7 +665,6 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- Thanh lọc nhanh theo danh mục / từ khóa -->
         <div class="content-card mb-4 py-3 px-4">
             <form method="GET" action="index.php#dan-xe" class="row align-items-end">
                 <div class="col-md-4 mb-2 mb-md-0">
@@ -735,14 +710,14 @@ require_once __DIR__ . '/includes/header.php';
                 <a href="index.php#dan-xe" class="btn btn-outline-primary btn-sm mt-2">Xem toàn bộ các dòng xe</a>
             </div>
         <?php else: ?>
-            <!-- Dàn thẻ xe kiểu Horizontal Accordion Showcase -->
+
             <div class="hkt-showcase-wrapper <?= count($dsXe) > 6 ? 'is-many' : '' ?>" id="hktShowcase">
                 <?php foreach ($dsXe as $idx => $xe):
                     $conLai  = (int) $xe['con_lai'];
                     $soLuong = (int) $xe['so_luong'];
                     $conXe   = ($conLai > 0);
                     $anh     = !empty($xe['hinh_anh']) ? $xe['hinh_anh'] : 'images/car-1.jpg';
-                    // Phòng trường hợp DB cũ còn lưu car-6.jpg là ảnh Yamaha Sirius trong khi tên xe là SH 150i
+
                     if ($anh === 'images/car-6.jpg' && stripos($xe['ten_xe'], 'SH') !== false) {
                         $anh = 'images/car-7.jpg';
                     }
@@ -751,7 +726,7 @@ require_once __DIR__ . '/includes/header.php';
                     $isActive  = ($idx === $defaultActiveIndex);
                 ?>
                 <div class="hkt-showcase-card <?= $isActive ? 'is-active' : '' ?>" data-showcase-card>
-                    <!-- Giao diện khi thu gọn (cột dọc bên trái) -->
+
                     <div class="sc-compact">
                         <div class="sc-compact-img-wrap">
                             <span class="sc-compact-stock-dot <?= $conXe ? '' : 'out' ?>">
@@ -768,7 +743,6 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     </div>
 
-                    <!-- Giao diện khi mở rộng (khung lớn bên phải) -->
                     <div class="sc-expanded">
                         <div class="sc-watermark"><?= e($meta['watermark']) ?></div>
 
@@ -789,7 +763,6 @@ require_once __DIR__ . '/includes/header.php';
                             <h3 class="sc-exp-title"><?= e($meta['full_title']) ?></h3>
                             <p class="sc-exp-desc"><?= e($meta['desc']) ?></p>
 
-                            <!-- 4 Ô trang bị tiêu chuẩn đi kèm (y hệt bố cục mẫu) -->
                             <div class="sc-perks-grid">
                                 <div class="sc-perk-box">
                                     <strong>02</strong>
@@ -823,9 +796,9 @@ require_once __DIR__ . '/includes/header.php';
                                         Đặt thuê xe
                                     </a>
                                 <?php else: ?>
-                                    <button type="button" class="btn btn-secondary font-weight-bold px-4" style="height:46px;border-radius:12px;" disabled>
-                                        Tạm hết xe
-                                    </button>
+                                    <a href="dat_xe.php?xe_id=<?= (int) $xe['id'] ?>" class="btn btn-warning font-weight-bold px-4 d-inline-flex align-items-center" style="height:46px;border-radius:12px;" onclick="event.stopPropagation();">
+                                        <i class="fa-solid fa-calendar-plus mr-2"></i>Đặt lịch trước
+                                    </a>
                                 <?php endif; ?>
                             </div>
                         </div>
@@ -841,7 +814,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<!-- 4. GIỚI THIỆU VỀ HKTGO & CAM KẾT DỊCH VỤ -->
 <section class="py-4">
     <div class="container">
         <div class="about-band mb-5">
@@ -869,7 +841,6 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- 4 Cam kết nổi bật -->
         <div class="row">
             <div class="col-md-6 col-lg-3 mb-4">
                 <div class="feature-box-item text-center">
@@ -911,7 +882,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<!-- 5. ĐÁNH GIÁ THỰC TẾ TỪ KHÁCH HÀNG -->
 <section id="danh-gia" class="py-5" style="background: #eef3fa; border-top: 1px solid #dde6f3; border-bottom: 1px solid #dde6f3;">
     <div class="container">
         <div class="text-center mb-5">
@@ -986,7 +956,6 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- Dải con số thống kê uy tín -->
         <div class="row mt-3">
             <div class="col-6 col-md-3 mb-3 mb-md-0">
                 <div class="counter-box">
@@ -1016,7 +985,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
-<!-- 6. CÂU HỎI THƯỜNG GẶP VỀ THỦ TỤC THUÊ XE -->
 <section class="py-5">
     <div class="container">
         <div class="row align-items-center">

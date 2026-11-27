@@ -52,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: xe.php' . ($action === 'update' ? '?edit=' . $id : ''));
             exit;
         }
-        
+
         if ($action === 'update') {
             $stmtHold = $pdo->prepare("
                 SELECT COUNT(*) FROM don_thue
@@ -146,8 +146,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1 fw-bold text-dark">Quản lý Kho xe máy</h1>
-        <p class="text-muted mb-0">Mỗi mẫu xe có tên duy nhất; khi nhập thêm xe cùng loại chỉ cần tăng tổng số lượng của mẫu đó</p>
+        <h1 class="h3 mb-1 fw-bold text-dark">Quản lý kho xe máy</h1>
     </div>
 </div>
 
@@ -172,16 +171,16 @@ require_once __DIR__ . '/../includes/admin_header.php';
                     <?php endif; ?>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small">Tên mẫu xe (Duy nhất) <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold small">Tên xe <span class="text-danger">*</span></label>
                         <input type="text" name="ten_xe" class="form-control" required
-                               value="<?= e($xeSua['ten_xe'] ?? '') ?>" placeholder="VD: Honda Air Blade 160">
+                               value="<?= e($xeSua['ten_xe'] ?? '') ?>">
                     </div>
 
                     <div class="row g-2 mb-3">
                         <div class="col-sm-6">
                             <label class="form-label fw-semibold small">Hãng sản xuất <span class="text-danger">*</span></label>
                             <input type="text" name="hang_xe" class="form-control" required
-                                   value="<?= e($xeSua['hang_xe'] ?? 'Honda') ?>" placeholder="Honda, Yamaha...">
+                                   value="<?= e($xeSua['hang_xe'] ?? 'Honda') ?>">
                         </div>
                         <div class="col-sm-6">
                             <label class="form-label fw-semibold small">Danh mục loại xe</label>

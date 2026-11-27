@@ -86,7 +86,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
 
 <div class="mb-4">
     <h1 class="h3 mb-1 fw-bold text-dark">Danh mục loại xe máy</h1>
-    <p class="text-muted mb-0">Phân nhóm các dòng xe (Xe tay ga, Xe số, Xe côn tay, Xe điện...) hiển thị ở bộ lọc trang chủ</p>
 </div>
 
 <div class="row g-4">
@@ -108,7 +107,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
                     <div class="mb-3">
                         <label class="form-label fw-semibold small">Tên danh mục <span class="text-danger">*</span></label>
                         <input type="text" name="ten" class="form-control" required
-                               value="<?= e($dmSua['ten'] ?? '') ?>" placeholder="VD: Xe phân khối lớn">
+                               value="<?= e($dmSua['ten'] ?? '') ?>">
                     </div>
 
                     <div class="mb-3">

@@ -1,29 +1,46 @@
 <?php
-/**
- * don_cua_toi.php
- * Danh sách đơn thuê xe của khách hàng: Hiển thị chi tiết Tiền thuê, Tiền cọc,
- * Trạng thái hoàn cọc 15 ngày, Thông báo khấu trừ hư hỏng/phạt nguội và Hợp đồng số.
- */
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 
 $user = requireLogin($pdo);
 
-// Xử lý khách hàng tự hủy đơn khi đang Chờ thanh toán hoặc Chờ duyệt
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'huy_don') {
     if (verifyCsrf()) {
         $donId = (int) ($_POST['don_id'] ?? 0);
-        $stmtCheck = $pdo->prepare("SELECT id, xe_may_id, trang_thai FROM don_thue WHERE id = ? AND user_id = ? LIMIT 1");
+        $stmtCheck = $pdo->prepare("
+            SELECT id, xe_may_id, trang_thai, trang_thai_coc, tong_tien, tien_coc
+            FROM don_thue
+            WHERE id = ? AND user_id = ?
+            LIMIT 1
+        ");
         $stmtCheck->execute([$donId, (int) $user['id']]);
         $donHuy = $stmtCheck->fetch();
 
         if ($donHuy && in_array($donHuy['trang_thai'], ['Chờ thanh toán', 'Chờ duyệt'], true)) {
-            $upd = $pdo->prepare("UPDATE don_thue SET trang_thai = 'Đã hủy', trang_thai_coc = 'Chưa thu' WHERE id = ?");
-            $upd->execute([$donId]);
+            $daThanhToan = ($donHuy['trang_thai'] === 'Chờ duyệt' || ($donHuy['trang_thai_coc'] ?? '') === 'Đang giữ cọc');
+            $ttCocMoi    = $daThanhToan ? 'Đã hoàn đủ' : 'Chưa thu';
+            $ghiChuHuy   = $daThanhToan
+                ? 'Khách hàng hủy đơn trước khi nhận xe — Đã hoàn trả lại toàn bộ tiền cọc (' . formatVnd($donHuy['tien_coc']) . ') & tiền thuê.'
+                : null;
+
+            $upd = $pdo->prepare("
+                UPDATE don_thue
+                SET trang_thai = 'Đã hủy',
+                    trang_thai_coc = ?,
+                    ghi_chu_su_co = COALESCE(?, ghi_chu_su_co)
+                WHERE id = ?
+            ");
+            $upd->execute([$ttCocMoi, $ghiChuHuy, $donId]);
+
             if (!empty($donHuy['xe_may_id'])) {
                 dongBoTrangThaiTatCaXe($pdo, (int) $donHuy['xe_may_id']);
             }
-            setFlash('info', 'Đã hủy đơn thuê #DH' . $donId . ' và hoàn trả xe về kho.');
+
+            if ($daThanhToan) {
+                setFlash('success', 'Đã hủy đơn thuê #DH' . $donId . ', hoàn trả suất xe về kho và hoàn lại đủ ' . formatVnd($donHuy['tien_coc']) . ' tiền cọc!');
+            } else {
+                setFlash('info', 'Đã hủy đơn giữ chỗ #DH' . $donId . ' (đơn chưa phát sinh thanh toán) và hoàn trả xe về kho.');
+            }
         }
     }
     header('Location: don_cua_toi.php');
@@ -101,7 +118,6 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         <?php endif; ?>
 
-        <!-- Bộ lọc trạng thái -->
         <div class="mb-4 d-flex flex-wrap" style="gap: 8px;">
             <a href="don_cua_toi.php" class="btn btn-sm <?= $locTrangThai === '' ? 'btn-primary font-weight-bold' : 'btn-outline-secondary bg-white' ?>">
                 Tất cả đơn

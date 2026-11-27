@@ -1,5 +1,4 @@
 <?php
-
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
@@ -41,7 +40,6 @@ function isAdmin(): bool
     return isLoggedIn() && strtoupper($_SESSION['user']['vai_tro'] ?? '') === 'ADMIN';
 }
 
-
 function requireLogin(PDO $pdo): array
 {
     $user = currentUser($pdo);
@@ -60,7 +58,6 @@ function requireLogin(PDO $pdo): array
     return $user;
 }
 
-
 function requireAdmin(PDO $pdo): array
 {
     $user = currentUser($pdo);
@@ -77,7 +74,6 @@ function requireAdmin(PDO $pdo): array
     return $user;
 }
 
-
 function csrfToken(): string
 {
     if (empty($_SESSION['csrf_token'])) {
@@ -91,7 +87,6 @@ function verifyCsrf(): bool
     $token = $_POST['csrf_token'] ?? '';
     return !empty($token) && !empty($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
 }
-
 
 function setFlash(string $type, string $message): void
 {
@@ -107,7 +102,6 @@ function getFlash(): ?array
     }
     return null;
 }
-
 
 function normalizePhone(string $raw): string
 {

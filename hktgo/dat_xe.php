@@ -1,15 +1,9 @@
 <?php
-/**
- * dat_xe.php
- * Tạo đơn thuê xe: Xác thực VNeID/BLX (có xem trước ảnh), liên kết bản điều khoản đầy đủ,
- * tính tiền thuê + tiền cọc, khóa dòng xe chống đặt trùng (FOR UPDATE) và giữ chỗ 15 phút.
- */
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 
 $user = requireLogin($pdo);
 
-// Chặn tài khoản đang bị khóa do vi phạm/nợ phạt nguội
 if (($user['trang_thai'] ?? 'Hoạt động') === 'Bị khóa') {
     setFlash('danger', 'Tài khoản của bạn hiện đang bị khóa do chưa hoàn tất nghĩa vụ thanh toán vi phạm/phạt nguội. Vui lòng liên hệ cửa hàng!');
     header('Location: index.php');
@@ -23,7 +17,6 @@ if ($xeId <= 0) {
     exit;
 }
 
-// Lấy thông tin xe và danh mục
 $stmtXe = $pdo->prepare("
     SELECT x.*, dm.ten AS ten_danh_muc
     FROM xe_may x
@@ -42,12 +35,10 @@ if (!$xe) {
 
 $conLaiHienTai = tinhSoLuongConLai($pdo, (int) $xe['id'], (int) $xe['so_luong'], false);
 
-// Kiểm tra xem xe có thuộc nhóm miễn BLX (Xe điện / 50cc) hay không
 $tenDmLower = mb_strtolower((string) ($xe['ten_danh_muc'] ?? ''), 'UTF-8');
 $tenXeLower = mb_strtolower((string) $xe['ten_xe'], 'UTF-8');
 $mienBlx    = (strpos($tenDmLower, 'điện') !== false || strpos($tenDmLower, '50cc') !== false || strpos($tenXeLower, '50cc') !== false);
 
-// Hàm hỗ trợ kiểm tra & lưu ảnh giấy tờ (VNeID / BLX)
 function luuAnhGiayTo(array $file, string $prefix, string $label, array &$errors): ?string
 {
     if (!isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
@@ -93,7 +84,6 @@ function luuAnhGiayTo(array $file, string $prefix, string $label, array &$errors
     return 'uploads/giay_to/' . $fileName;
 }
 
-// Giá trị mặc định cho biểu mẫu
 $todayStr    = date('Y-m-d');
 $tomorrowStr = date('Y-m-d', strtotime('+1 day'));
 
@@ -133,12 +123,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = 'Số định danh cá nhân / CCCD trên VNeID phải gồm đúng 12 chữ số.';
     }
 
-    // Kiểm tra ảnh VNeID (bắt buộc)
     if (!isset($_FILES['anh_vneid']) || $_FILES['anh_vneid']['error'] === UPLOAD_ERR_NO_FILE) {
         $errors[] = 'Vui lòng chọn tệp ảnh chụp màn hình định danh VNeID (hoặc CCCD).';
     }
 
-    // Kiểm tra số BLX & ảnh BLX (bắt buộc với xe trên 50cc)
     if (!$mienBlx) {
         if ($soBlx === '' || strlen($soBlx) < 8) {
             $errors[] = 'Vui lòng nhập đầy đủ số Giấy phép lái xe (BLX) hợp lệ.';
@@ -179,7 +167,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Xử lý lưu tệp ảnh nếu các trường thông tin đã hợp lệ
     $pathAnhVneid = null;
     $pathAnhBlx   = null;
     if (empty($errors)) {
@@ -201,11 +188,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->rollBack();
                 $errors[] = 'Mẫu xe không còn tồn tại trong hệ thống.';
             } else {
-                $conLaiTrongKho = tinhSoLuongConLai($pdo, $xeId, (int) $xeLocked['so_luong'], true);
+                $conLaiTrongKho = tinhSoLuongConLai($pdo, $xeId, (int) $xeLocked['so_luong'], true, $ngayNhan, $ngayTra);
                 if ($conLaiTrongKho <= 0) {
                     $pdo->rollBack();
-                    $errors[] = 'Rất tiếc, mẫu xe này vừa hết xe khả dụng. Vui lòng chọn mẫu xe khác!';
-                    $conLaiHienTai = 0;
+                    $errors[] = 'Mẫu xe này đã kín lịch trong khoảng thời gian từ ' . date('d/m/Y', strtotime($ngayNhan)) . ' đến ' . date('d/m/Y', strtotime($ngayTra)) . '. Vui lòng chọn ngày khác hoặc đổi mẫu xe!';
                 } else {
                     $giaThueDon    = (float) $xeLocked['gia_thue'];
                     $tienCocDon    = (float) ($xeLocked['tien_coc'] ?? 1000000);
@@ -280,7 +266,7 @@ require_once __DIR__ . '/includes/header.php';
 <section class="py-5">
     <div class="container">
         <div class="row">
-            <!-- Cột trái: Thông tin xe & Bảng giá cọc -->
+
             <div class="col-lg-5 mb-4">
                 <div class="content-card h-100">
                     <div class="position-relative mb-3">
@@ -331,7 +317,6 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Cột phải: Biểu mẫu đặt xe & Xác thực hồ sơ -->
             <div class="col-lg-7">
                 <div class="content-card">
                     <h4 class="font-weight-bold text-dark mb-3">
@@ -348,19 +333,24 @@ require_once __DIR__ . '/includes/header.php';
                         </div>
                     <?php endif; ?>
 
-                    <?php if ($conLaiHienTai <= 0): ?>
+                    <?php if ((int) $xe['so_luong'] <= 0): ?>
                         <div class="alert alert-warning">
-                            <strong>Mẫu xe này hiện đã hết xe trống.</strong> Bạn vui lòng quay lại trang chủ để chọn mẫu xe khác đang sẵn sàng.
+                            <strong>Mẫu xe này hiện đang tạm ngừng cho thuê.</strong> Bạn vui lòng quay lại trang chủ để chọn mẫu xe khác đang sẵn sàng.
                         </div>
                         <a href="index.php#dan-xe" class="btn btn-primary font-weight-bold">
                             <i class="fa-solid fa-arrow-left mr-1"></i>Xem các mẫu xe khác
                         </a>
                     <?php else: ?>
+                        <?php if ($conLaiHienTai <= 0): ?>
+                            <div class="alert alert-info py-2 small">
+                                <i class="fa-solid fa-calendar-check mr-1"></i>
+                                Mẫu xe này hiện đang có khách thuê, bạn vẫn có thể chọn <strong>Ngày nhận xe &amp; Ngày trả xe</strong> trống lịch bên dưới để <strong>đặt lịch trước</strong>.
+                            </div>
+                        <?php endif; ?>
                         <form method="POST" action="dat_xe.php?xe_id=<?= (int) $xe['id'] ?>" enctype="multipart/form-data">
                             <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                             <input type="hidden" name="xe_id" value="<?= (int) $xe['id'] ?>">
 
-                            <!-- Nhóm 1: Thông tin người nhận -->
                             <h6 class="font-weight-bold text-primary text-uppercase small mb-2">1. Thông tin người nhận xe</h6>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -375,7 +365,6 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                             </div>
 
-                            <!-- Nhóm 2: Xác thực VNeID & Bằng lái xe -->
                             <h6 class="font-weight-bold text-primary text-uppercase small mt-2 mb-2">2. Xác thực định danh VNeID &amp; Bằng lái xe (BLX)</h6>
                             <div class="p-3 rounded mb-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
                                 <div class="row">
@@ -419,7 +408,6 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                             </div>
 
-                            <!-- Nhóm 3: Lịch trình & Địa điểm -->
                             <h6 class="font-weight-bold text-primary text-uppercase small mt-2 mb-2">3. Thời gian &amp; Địa điểm giao nhận</h6>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -447,13 +435,12 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                             </div>
 
-                            <!-- Nhóm 4: Xác nhận điều khoản (Bấm vào để đọc bản giấy hoàn chỉnh) -->
                             <div class="p-3 rounded mb-3" style="background:#f8fafc;border:1px solid #cbd5e1;">
                                 <div class="custom-control custom-checkbox">
                                     <input type="checkbox" class="custom-control-input" id="dongYDieuKhoan" name="dong_y_dieu_khoan" value="1" required <?= $dongYDieuKhoan ? 'checked' : '' ?>>
                                     <label class="custom-control-label font-weight-semibold text-dark" for="dongYDieuKhoan">
                                         Tôi đã đọc kỹ và hoàn toàn đồng ý với
-                                        <a href="dieu_khoan.php" target="_blank" class="text-primary font-weight-bold" style="text-decoration: underline;">
+                                        <a href="docs/dieu_khoan_hktgo.pdf" target="_blank" class="text-primary font-weight-bold" style="text-decoration: underline;">
                                             Điều khoản &amp; Chính sách thuê xe HKTGO
                                         </a>
                                         <span class="text-danger">*</span>
@@ -461,7 +448,6 @@ require_once __DIR__ . '/includes/header.php';
                                 </div>
                             </div>
 
-                            <!-- Khung tạm tính chi phí -->
                             <div class="p-3 rounded mb-4" style="background:#eef6ff;border:1px solid #cfe2ff;">
                                 <div class="d-flex justify-content-between mb-1">
                                     <span class="text-muted">Số ngày thuê dự kiến:</span>
@@ -499,7 +485,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <script>
 (function () {
-    // 1. Tính tạm tiền thuê + tiền cọc
+
     var giaThue = <?= $giaThueMacDinh ?>;
     var tienCoc = <?= $tienCocMacDinh ?>;
     var elNhan  = document.getElementById('ngayNhanInput');
@@ -532,7 +518,6 @@ require_once __DIR__ . '/includes/header.php';
         capNhatTamTinh();
     }
 
-    // 2. Xem trước ảnh VNeID và BLX ngay khi chọn tệp
     function bindPreview(inputId, boxId, imgId) {
         var inp = document.getElementById(inputId);
         var box = document.getElementById(boxId);

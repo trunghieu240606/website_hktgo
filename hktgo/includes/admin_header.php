@@ -67,7 +67,7 @@ $navItems = [
         .admin-sidebar-backdrop.show {
             display: block;
         }
-        /* Đảm bảo hộp thoại Modal luôn nằm trên lớp phủ backdrop và thanh điều hướng */
+
         .modal-backdrop {
             --bs-backdrop-zindex: 1050;
             z-index: 1050 !important;
@@ -176,20 +176,6 @@ $navItems = [
                             </a>
                         </li>
                         <?php endforeach; ?>
-
-                        <li class="nav-item mt-3 pt-3 border-top">
-                            <div class="text-uppercase text-muted fw-bold fs-7 mb-2 px-2">Lối tắt</div>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-secondary rounded px-3 py-2" href="../index.php">
-                                <i class="fa-solid fa-house me-2"></i>Về trang chủ Khách
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-danger rounded px-3 py-2" href="../dang_xuat.php">
-                                <i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Đăng xuất
-                            </a>
-                        </li>
                     </ul>
                 </nav>
             </div>

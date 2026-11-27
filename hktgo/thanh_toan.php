@@ -1,9 +1,4 @@
 <?php
-/**
- * thanh_toan.php
- * Hiển thị mã VietQR (Tiền thuê + Tiền cọc), đếm ngược 15 phút,
- * cập nhật trạng thái giữ cọc và liên kết xem Hợp đồng thuê xe số.
- */
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/auth.php';
 
@@ -72,10 +67,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'huy_don') {
         if (in_array($don['trang_thai'], ['Chờ thanh toán', 'Chờ duyệt'], true)) {
-            $upd = $pdo->prepare("UPDATE don_thue SET trang_thai = 'Đã hủy', trang_thai_coc = 'Chưa thu' WHERE id = ?");
-            $upd->execute([$donId]);
+            $daThanhToan = ($don['trang_thai'] === 'Chờ duyệt' || ($don['trang_thai_coc'] ?? '') === 'Đang giữ cọc');
+            $ttCocMoi    = $daThanhToan ? 'Đã hoàn đủ' : 'Chưa thu';
+            $ghiChuHuy   = $daThanhToan
+                ? 'Khách hàng hủy đơn trước khi nhận xe — Đã hoàn trả đủ tiền cọc (' . formatVnd($don['tien_coc']) . ') & tiền thuê.'
+                : null;
+
+            $upd = $pdo->prepare("
+                UPDATE don_thue
+                SET trang_thai = 'Đã hủy',
+                    trang_thai_coc = ?,
+                    ghi_chu_su_co = COALESCE(?, ghi_chu_su_co)
+                WHERE id = ?
+            ");
+            $upd->execute([$ttCocMoi, $ghiChuHuy, $donId]);
             dongBoTrangThaiTatCaXe($pdo, (int) $don['xe_may_id']);
-            setFlash('info', 'Đã hủy đơn thuê #DH' . $donId . ' và hoàn trả suất xe về kho.');
+
+            setFlash(
+                $daThanhToan ? 'success' : 'info',
+                $daThanhToan
+                    ? 'Đã hủy đơn #DH' . $donId . ' và hoàn lại đủ tiền cọc (' . formatVnd($don['tien_coc']) . ') cho bạn.'
+                    : 'Đã hủy đơn giữ chỗ #DH' . $donId . ' và hoàn trả suất xe về kho.'
+            );
         }
         header('Location: don_cua_toi.php');
         exit;
@@ -112,7 +125,7 @@ require_once __DIR__ . '/includes/header.php';
 <section class="py-5">
     <div class="container">
         <div class="row">
-            <!-- Cột trái: Mã VietQR & Nút xác nhận -->
+
             <div class="col-lg-6 mb-4">
                 <div class="content-card text-center h-100">
                     <?php if ($dangChoThanhToan): ?>
@@ -184,7 +197,6 @@ require_once __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <!-- Cột phải: Chi tiết đơn, hồ sơ xác thực & Hợp đồng số -->
             <div class="col-lg-6 mb-4">
                 <div class="content-card h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3">

@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 
@@ -77,15 +76,13 @@ require_once __DIR__ . '/../includes/admin_header.php';
 ?>
 
 <div class="mb-4">
-    <h1 class="h3 mb-1 fw-bold text-dark">Quản lý Tài khoản &amp; Phân quyền (Set Role)</h1>
-    <p class="text-muted mb-0">Tra cứu danh sách người dùng, khóa/mở khóa tài khoản vi phạm và cấp/thu hồi vai trò <strong>ADMIN</strong> hoặc <strong>USER</strong></p>
+    <h1 class="h3 mb-1 fw-bold text-dark">Quản lý Tài khoản</h1>
 </div>
 
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h5 class="card-title mb-0 fw-bold">Danh sách tài khoản hệ thống (<?= count($dsTaiKhoan) ?>)</h5>
         <span class="small text-muted">
-            <i class="fa-solid fa-shield-halved text-primary me-1"></i>Hệ thống tự động bảo vệ tài khoản ADMIN cuối cùng
         </span>
     </div>
     <div class="card-body p-0">
@@ -154,9 +151,9 @@ require_once __DIR__ . '/../includes/admin_header.php';
                                         <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
                                         <input type="hidden" name="action" value="toggle_lock">
                                         <input type="hidden" name="user_id" value="<?= (int) $tk['id'] ?>">
-                                        <button type="submit" class="btn btn-sm <?= $dangKhoa ? 'btn-outline-success' : 'btn-outline-danger' ?> text-nowrap"
+                                        <button type="submit" class="btn btn-sm <?= $dangKhoa ? 'btn-success' : 'btn-outline-danger' ?> fw-semibold text-nowrap"
                                                 title="<?= $dangKhoa ? 'Mở khóa quyền đặt xe' : 'Khóa quyền đặt xe' ?>">
-                                            <i class="fa-solid <?= $dangKhoa ? 'fa-lock-open' : 'fa-lock' ?>"></i>
+                                            <i class="fa-solid <?= $dangKhoa ? 'fa-lock-open' : 'fa-lock' ?> me-1"></i><?= $dangKhoa ? 'Mở khóa' : 'Khóa' ?>
                                         </button>
                                     </form>
                                 <?php endif; ?>

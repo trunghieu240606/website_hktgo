@@ -1,11 +1,9 @@
 <?php
-
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 
 $pageTitle = 'Tổng quan Quản trị - HKTGO';
 require_once __DIR__ . '/../includes/admin_header.php';
-
 
 $tongDon       = (int) $pdo->query("SELECT COUNT(*) FROM don_thue")->fetchColumn();
 $donChoDuyet   = (int) $pdo->query("SELECT COUNT(*) FROM don_thue WHERE trang_thai IN ('Chờ thanh toán', 'Chờ duyệt')")->fetchColumn();
@@ -59,10 +57,6 @@ function adminBadgeDon(string $tt): string
 ?>
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-    <div>
-        <h1 class="h3 mb-1 fw-bold text-dark">Bảng điều khiển Quản trị</h1>
-        <p class="text-muted mb-0">Theo dõi nhanh hoạt động đặt xe, tồn kho khả dụng và doanh thu hoàn thành</p>
-    </div>
     <div class="d-flex gap-2 mt-2 mt-md-0">
         <a href="xe.php" class="btn btn-primary btn-sm fw-semibold">
             <i class="fa-solid fa-plus me-1"></i>Quản lý Kho xe

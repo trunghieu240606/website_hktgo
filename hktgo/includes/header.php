@@ -156,6 +156,12 @@ $flash = getFlash();
         .price-nowrap {
             white-space: nowrap;
         }
+        .modal-backdrop {
+            z-index: 1050 !important;
+        }
+        .modal {
+            z-index: 1060 !important;
+        }
         .content-card {
             background: #fff;
             border-radius: 14px;
@@ -163,7 +169,7 @@ $flash = getFlash();
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
             padding: 26px;
         }
-        /* Ghi đè quy tắc .table { min-width: 1000px !important; padding: 30px 0 } của template Carbook */
+
         .table {
             min-width: 0 !important;
             width: 100% !important;
@@ -241,6 +247,9 @@ $flash = getFlash();
                                 <span class="badge badge-info mt-1"><?= e($currentUser['vai_tro']) ?></span>
                             </div>
                             <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="<?= baseUrl('ho_so.php') ?>">
+                                <i class="fa-solid fa-user-gear mr-2 text-success"></i>Tài khoản cá nhân
+                            </a>
                             <a class="dropdown-item" href="<?= baseUrl('don_cua_toi.php') ?>">
                                 <i class="fa-solid fa-clock-rotate-left mr-2 text-primary"></i>Lịch sử đơn thuê
                             </a>

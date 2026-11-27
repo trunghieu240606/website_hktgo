@@ -29,7 +29,7 @@
             }
         });
     }
-    // Đảm bảo mọi .modal còn nằm trong .admin-app được chuyển ra trực tiếp dưới <body> để tránh xung đột stacking context
+
     document.querySelectorAll('.admin-app .modal').forEach(function (modalEl) {
         document.body.appendChild(modalEl);
     });

@@ -58,7 +58,6 @@ function tuDongHuyDonQuaHanVaDongBoKho(PDO $pdo): void
     }
 }
 
-
 function dongBoTrangThaiTatCaXe(PDO $pdo, ?int $xeId = null): void
 {
     $sql = "
@@ -83,18 +82,32 @@ function dongBoTrangThaiTatCaXe(PDO $pdo, ?int $xeId = null): void
     }
 }
 
-function tinhSoLuongConLai(PDO $pdo, int $xeId, int $tongSoLuong, bool $lockForUpdate = false): int
-{
+function tinhSoLuongConLai(
+    PDO $pdo,
+    int $xeId,
+    int $tongSoLuong,
+    bool $lockForUpdate = false,
+    ?string $ngayNhan = null,
+    ?string $ngayTra = null
+): int {
     $sql = "
         SELECT COUNT(*) FROM don_thue
         WHERE xe_may_id = ?
           AND trang_thai IN ('Chờ thanh toán', 'Chờ duyệt', 'Đang thuê')
     ";
+    $params = [$xeId];
+
+    if ($ngayNhan !== null && $ngayTra !== null) {
+        $sql .= " AND ngay_nhan <= ? AND ngay_tra >= ?";
+        $params[] = $ngayTra;
+        $params[] = $ngayNhan;
+    }
+
     if ($lockForUpdate) {
         $sql .= " FOR UPDATE";
     }
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$xeId]);
+    $stmt->execute($params);
     $dangGiu = (int) $stmt->fetchColumn();
 
     return max(0, $tongSoLuong - $dangGiu);
@@ -104,7 +117,6 @@ function formatVnd($amount): string
 {
     return number_format((float) $amount, 0, ',', '.') . "\u{00A0}₫";
 }
-
 
 function e(?string $val): string
 {

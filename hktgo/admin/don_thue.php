@@ -1,9 +1,4 @@
 <?php
-/**
- * admin/don_thue.php
- * Quản lý Đơn thuê xe: Đối soát VNeID/BLX, Duyệt giao xe, Nghiệm thu nhận trả xe
- * (tính phí quá hạn, hư hỏng, giữ 500k cọc phạt nguội 15 ngày), Hoàn cọc & Khấu trừ phạt nguội.
- */
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/../includes/auth.php';
 
@@ -36,7 +31,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $userIdDon = (int) ($donRow['user_id'] ?? 0);
         $ttHienTai = $donRow['trang_thai'];
 
-        // 1. Duyệt giao xe ('Đang thuê' & 'Đang giữ cọc')
         if ($action === 'duyet_giao_xe') {
             if (in_array($ttHienTai, ['Chờ duyệt', 'Chờ thanh toán'], true)) {
                 $upd = $pdo->prepare("
@@ -56,7 +50,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // 2. Nghiệm thu nhận trả xe (Tính phí quá hạn, hư hỏng & giữ 500k phạt nguội 15 ngày)
         elseif ($action === 'nhan_tra_xe') {
             if ($ttHienTai === 'Đang thuê') {
                 $phiQuaHan   = max(0, (float) ($_POST['phi_qua_han'] ?? 0));
@@ -116,8 +109,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 setFlash('warning', 'Chỉ những đơn đang ở trạng thái "Đang thuê" mới có thể nhận trả xe.');
             }
         }
-
-        // 3. Hoàn nốt 500.000đ cọc sau 15 ngày không vi phạm phạt nguội
         elseif ($action === 'hoan_not_coc') {
             if ($ttHienTai === 'Hoàn thành' && ($donRow['trang_thai_coc'] ?? '') === 'Giữ cọc phạt nguội 15 ngày') {
                 $upd = $pdo->prepare("
@@ -131,7 +122,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // 4. Ghi nhận phạt nguội / sự cố phát sinh sau thuê & Khóa tài khoản nếu vi phạm nghiêm trọng
         elseif ($action === 'xu_ly_phat_nguoi') {
             $tienPhatNguoi = max(0, (float) ($_POST['tien_phat_nguoi'] ?? 0));
             $noiDungPhat   = trim((string) ($_POST['noi_dung_phat'] ?? ''));
@@ -160,17 +150,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        // 5. Hủy đơn thuê
         elseif ($action === 'huy_don') {
             if ($ttHienTai !== 'Hoàn thành' && $ttHienTai !== 'Đã hủy') {
-                $upd = $pdo->prepare("UPDATE don_thue SET trang_thai = 'Đã hủy', trang_thai_coc = 'Chưa thu' WHERE id = ?");
-                $upd->execute([$donId]);
+                $daGiuCoc  = in_array(($donRow['trang_thai_coc'] ?? ''), ['Đang giữ cọc', 'Giữ cọc phạt nguội 15 ngày'], true)
+                             || in_array($ttHienTai, ['Chờ duyệt', 'Đang thuê'], true);
+                $ttCocMoi  = $daGiuCoc ? 'Đã hoàn đủ' : 'Chưa thu';
+                $ghiChuHuy = $daGiuCoc
+                    ? 'Quản trị viên hủy đơn — Đã hoàn trả đủ tiền cọc (' . formatVnd($donRow['tien_coc']) . ') cho khách hàng.'
+                    : null;
+
+                $upd = $pdo->prepare("
+                    UPDATE don_thue
+                    SET trang_thai = 'Đã hủy',
+                        trang_thai_coc = ?,
+                        ghi_chu_su_co = COALESCE(?, ghi_chu_su_co)
+                    WHERE id = ?
+                ");
+                $upd->execute([$ttCocMoi, $ghiChuHuy, $donId]);
+
                 if ($xeId > 0) {
                     dongBoTrangThaiTatCaXe($pdo, $xeId);
                 }
-                setFlash('info', 'Đã hủy đơn thuê #DH' . $donId . ' và hoàn trả suất xe về kho.');
+
+                if ($daGiuCoc) {
+                    setFlash('success', 'Đã hủy đơn #DH' . $donId . ', trả xe về kho và xác nhận HOÀN ĐỦ CỌC (' . formatVnd($donRow['tien_coc']) . ') cho khách.');
+                } else {
+                    setFlash('info', 'Đã hủy đơn giữ chỗ #DH' . $donId . ' (chưa thu tiền) và hoàn trả suất xe về kho.');
+                }
             } else {
                 setFlash('warning', 'Không thể hủy đơn đã hoàn thành hoặc đã hủy trước đó.');
+            }
+        }
+
+        elseif ($action === 'mo_khoa_tai_khoan') {
+            if ($userIdDon > 0) {
+                $updUser = $pdo->prepare("UPDATE users SET trang_thai = 'Hoạt động' WHERE id = ?");
+                $updUser->execute([$userIdDon]);
+                setFlash('success', 'Đã MỞ KHÓA tài khoản cho khách hàng "' . $donRow['ten_khach_hang'] . '". Khách có thể đặt xe bình thường.');
             }
         }
     }
@@ -234,7 +250,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
 ?>
 
 <style>
-    /* Cố định bố cục Modal hiển thị dọc chuẩn xác, không bị ảnh hưởng bởi CSS bảng/form */
     .hkt-modal .modal-content {
         display: flex !important;
         flex-direction: column !important;
@@ -264,12 +279,10 @@ require_once __DIR__ . '/../includes/admin_header.php';
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1 fw-bold text-dark">Quản lý Đơn thuê &amp; Đối soát Cọc / Phạt nguội</h1>
-        <p class="text-muted mb-0">Kiểm tra VNeID/BLX, duyệt giao xe, nghiệm thu trả xe (giữ 500k phạt nguội 15 ngày) và xử lý vi phạm</p>
+        <h1 class="h3 mb-1 fw-bold text-dark">Quản lý đơn thuê</h1>
     </div>
 </div>
 
-<!-- Thanh tìm kiếm & lọc trạng thái -->
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-body">
         <form method="GET" action="don_thue.php" class="row g-2 align-items-end">
@@ -298,7 +311,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
     </div>
 </div>
 
-<!-- Bảng danh sách đơn thuê -->
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3">
         <h5 class="card-title mb-0 fw-bold">Danh sách đơn thuê (<?= count($dsDon) ?> đơn)</h5>
@@ -349,6 +361,15 @@ require_once __DIR__ . '/../includes/admin_header.php';
                                     <?= e($d['ten_khach_hang']) ?>
                                     <?php if (($d['user_trang_thai'] ?? '') === 'Bị khóa'): ?>
                                         <span class="badge bg-danger ms-1">TK Bị khóa</span>
+                                        <form method="POST" action="don_thue.php" class="d-inline ms-1"
+                                              onsubmit="return confirm('Xác nhận khách hàng đã tất toán vi phạm và MỞ KHÓA tài khoản này?');">
+                                            <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
+                                            <input type="hidden" name="don_id" value="<?= $idDon ?>">
+                                            <input type="hidden" name="action" value="mo_khoa_tai_khoan">
+                                            <button type="submit" class="btn btn-outline-success py-0 px-2" style="font-size: 11px;">
+                                                <i class="fa-solid fa-lock-open me-1"></i>Mở khóa TK
+                                            </button>
+                                        </form>
                                     <?php endif; ?>
                                 </div>
                                 <div class="small text-muted">SĐT: <?= e($d['so_dien_thoai']) ?></div>
@@ -394,6 +415,10 @@ require_once __DIR__ . '/../includes/admin_header.php';
                             </td>
                             <td class="pe-3 text-end">
                                 <div class="d-inline-flex flex-wrap justify-content-end gap-1">
+                                    <button type="button" class="btn btn-sm btn-outline-info text-dark fw-semibold text-nowrap" data-bs-toggle="modal" data-bs-target="#modalChiTietTien<?= $idDon ?>">
+                                        <i class="fa-solid fa-receipt me-1"></i>Chi tiết
+                                    </button>
+
                                     <?php if (in_array($d['trang_thai'], ['Chờ duyệt', 'Chờ thanh toán'], true)): ?>
                                         <form method="POST" action="don_thue.php" class="d-inline">
                                             <input type="hidden" name="csrf_token" value="<?= e(csrfToken()) ?>">
@@ -450,7 +475,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
     </div>
 </div>
 
-<!-- CÁC HỘP THOẠI MODAL ĐƯỢC ĐẨY RA NGOÀI .admin-app Ở CHÂN TRANG ĐỂ TRÁNH CHỒNG LỚP BACKDROP -->
 <?php ob_start(); ?>
 <?php foreach ($dsDon as $d): ?>
     <?php
@@ -466,9 +490,109 @@ require_once __DIR__ . '/../includes/admin_header.php';
             $soNgayQuaHan = (int) $dtTraDuKien->diff($dtHomNay)->days;
         }
         $goiYPhatQuaHan = $soNgayQuaHan * $donGiaXe * 1.5;
+
+        $tienThueGoc   = $tienThue;
+        $phiQuaHan     = (float) ($d['phi_qua_han'] ?? 0);
+        $phiPhatSinh   = (float) ($d['phi_phat_sinh'] ?? 0);
+        $tongKhauTru   = $phiQuaHan + $phiPhatSinh;
+        $ttCoc         = $d['trang_thai_coc'] ?? 'Chưa thu';
+        $dtChiuThueDon = ($d['trang_thai'] === 'Hoàn thành') ? ($tienThueGoc + $phiQuaHan) : 0;
+
+        if ($ttCoc === 'Đang giữ cọc') {
+            $cocDangGiu = $tienCoc;
+            $cocDaHoan  = 0;
+        } elseif ($ttCoc === 'Giữ cọc phạt nguội 15 ngày') {
+            $cocDangGiu = min(500000, max(0, $tienCoc - $tongKhauTru));
+            $cocDaHoan  = max(0, $tienCoc - $tongKhauTru - $cocDangGiu);
+        } elseif (in_array($ttCoc, ['Đã hoàn đủ', 'Đã khấu trừ phạt'], true)) {
+            $cocDangGiu = 0;
+            $cocDaHoan  = max(0, $tienCoc - $tongKhauTru);
+        } else {
+            $cocDangGiu = 0;
+            $cocDaHoan  = 0;
+        }
+        $khachDongBu = max(0, $tongKhauTru - $tienCoc);
     ?>
 
-    <!-- MODAL 1: XEM HỒ SƠ ẢNH VNEID & BLX -->
+    <div class="modal fade hkt-modal" id="modalChiTietTien<?= $idDon ?>" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold mb-0">Chi tiết đơn    #DH<?= $idDon ?></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="small text-muted mb-3">
+                        Khách hàng: <strong class="text-dark"><?= e($d['ten_khach_hang']) ?></strong> &bull; Xe: <strong class="text-dark"><?= e($d['ten_xe'] ?: 'Xe máy') ?></strong>
+                    </div>
+
+                    <div class="p-3 rounded mb-3" style="background:#f0fdf4;border:1px solid #bbf7d0;">
+                        <div class="fw-bold text-success small text-uppercase mb-2">1. Doanh thu dịch vụ chịu thuế</div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Tiền thuê xe gốc (<?= (int) $d['so_ngay'] ?> ngày):</span>
+                            <strong><?= formatVnd($tienThueGoc) ?></strong>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Phụ thu trả xe quá hạn (150%):</span>
+                            <strong><?= formatVnd($phiQuaHan) ?></strong>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between fw-bold text-success">
+                            <span>Tổng doanh thu tính thuế của đơn:</span>
+                            <span><?= formatVnd($dtChiuThueDon) ?></span>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded mb-3" style="background:#fef2f2;border:1px solid #fecaca;">
+                        <div class="fw-bold text-danger small text-uppercase mb-2">2. Thu bồi thường sửa chữa &amp; nộp hộ phạt nguội (Tách thuế)</div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Khấu trừ sửa chữa hư hỏng / phạt nguội CSGT:</span>
+                            <strong class="text-danger"><?= formatVnd($phiPhatSinh) ?></strong>
+                        </div>
+                        <?php if (!empty($d['ghi_chu_su_co'])): ?>
+                            <div class="small text-danger mt-1">
+                                <em>Biên bản: <?= e($d['ghi_chu_su_co']) ?></em>
+                            </div>
+                        <?php else: ?>
+                            <div class="small text-muted">Không phát sinh hư hỏng hay vi phạm phạt nguội.</div>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="p-3 rounded" style="background:#fffbeb;border:1px solid #fde68a;">
+                        <div class="fw-bold small text-uppercase mb-2" style="color:#b45309;">3. Đối soát tiền đặt cọc tài sản (<?= e($ttCoc) ?>)</div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Tiền cọc khách đã nộp ban đầu:</span>
+                            <strong><?= formatVnd($tienCoc) ?></strong>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Đã khấu trừ (Quá hạn + Hư hỏng/Phạt nguội):</span>
+                            <strong class="text-danger">-<?= formatVnd(min($tienCoc, $tongKhauTru)) ?></strong>
+                        </div>
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Đang tạm giữ chờ đối soát (15 ngày / đang thuê):</span>
+                            <strong style="color:#b45309;"><?= formatVnd($cocDangGiu) ?></strong>
+                        </div>
+                        <div class="d-flex justify-content-between small">
+                            <span>Đã hoàn trả lại cho khách hàng:</span>
+                            <strong class="text-success"><?= formatVnd($cocDaHoan) ?></strong>
+                        </div>
+                        <?php if ($khachDongBu > 0): ?>
+                            <div class="mt-2 pt-2 border-top small fw-bold text-danger">
+                                Khách hàng phải đóng bù thêm ngoài cọc: <?= formatVnd($khachDongBu) ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="../hop_dong.php?id=<?= $idDon ?>" target="_blank" class="btn btn-outline-primary">
+                        <i class="fa-solid fa-file-contract me-1"></i>Xem Hợp đồng
+                    </a>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade hkt-modal" id="modalHoSo<?= $idDon ?>" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
@@ -508,7 +632,7 @@ require_once __DIR__ . '/../includes/admin_header.php';
                 </div>
                 <div class="modal-footer">
                     <a href="../hop_dong.php?id=<?= $idDon ?>" target="_blank" class="btn btn-outline-primary">
-                        <i class="fa-solid fa-file-contract me-1"></i>Mở Hợp đồng thuê xe số
+                        <i class="fa-solid fa-file-contract me-1"></i>Hợp đồng
                     </a>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                 </div>
@@ -516,7 +640,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
         </div>
     </div>
 
-    <!-- MODAL 2: NGHIỆM THU NHẬN TRẢ XE & GIỮ CỌC PHẠT NGUỘI 15 NGÀY -->
     <?php if ($d['trang_thai'] === 'Đang thuê'): ?>
     <div class="modal fade hkt-modal" id="modalTraXe<?= $idDon ?>" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -576,7 +699,6 @@ require_once __DIR__ . '/../includes/admin_header.php';
     </div>
     <?php endif; ?>
 
-    <!-- MODAL 3: GHI NHẬN PHẠT NGUỘI SAU THUÊ -->
     <?php if ($d['trang_thai'] === 'Hoàn thành'): ?>
     <div class="modal fade hkt-modal" id="modalPhatNguoi<?= $idDon ?>" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

@@ -1,16 +1,9 @@
--- =====================================================================
--- CƠ SỞ DỮ LIỆU HỆ THỐNG CHO THUÊ XE MÁY TRỰC TUYẾN HKT GO (PHP & MySQL)
--- Tên CSDL: hktgo_db (4 bảng quan hệ: users, danh_muc_xe, xe_may, don_thue)
--- Tương thích Laragon / XAMPP / phpMyAdmin (MySQL 8.0 / MariaDB 10.4+)
--- =====================================================================
-
 CREATE DATABASE IF NOT EXISTS `hktgo_db`
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
 USE `hktgo_db`;
 
--- 1. Bảng users: Quản lý tài khoản và phân quyền 2 vai trò (ADMIN, USER)
 CREATE TABLE IF NOT EXISTS `users` (
   `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `ho_ten` VARCHAR(100) NOT NULL,
@@ -22,7 +15,6 @@ CREATE TABLE IF NOT EXISTS `users` (
   `ngay_tao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 2. Bảng danh_muc_xe: Phân loại dòng xe máy
 CREATE TABLE IF NOT EXISTS `danh_muc_xe` (
   `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `ten` VARCHAR(100) NOT NULL UNIQUE,
@@ -31,7 +23,6 @@ CREATE TABLE IF NOT EXISTS `danh_muc_xe` (
   `ngay_tao` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 3. Bảng xe_may: Thông tin mẫu xe (ten_xe duy nhất), tiền cọc và tổng số lượng tồn kho (so_luong)
 CREATE TABLE IF NOT EXISTS `xe_may` (
   `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `danh_muc_xe_id` INT UNSIGNED NULL,
@@ -49,7 +40,6 @@ CREATE TABLE IF NOT EXISTS `xe_may` (
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 4. Bảng don_thue: Đơn thuê xe, hồ sơ VNeID/BLX, tiền cọc, giữ chỗ 15 phút & vòng đời trạng thái
 CREATE TABLE IF NOT EXISTS `don_thue` (
   `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   `user_id` INT UNSIGNED NOT NULL,
@@ -90,10 +80,6 @@ CREATE TABLE IF NOT EXISTS `don_thue` (
     FOREIGN KEY (`xe_may_id`) REFERENCES `xe_may` (`id`)
     ON UPDATE CASCADE ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- =====================================================================
--- DỮ LIỆU MẪU KHỞI TẠO (Mật khẩu mặc định của các tài khoản mẫu: 123456)
--- =====================================================================
 
 INSERT INTO `users` (`id`, `ho_ten`, `email`, `sdt`, `mat_khau`, `vai_tro`) VALUES
 (1, 'Quản trị viên HKTGO', 'admin@example.com', '0901234567', '$2y$10$J0sASxUnmuSif4hbE2UgO.l5TfN05tsQqxWo15YirkUtfFKV1HlWy', 'ADMIN'),

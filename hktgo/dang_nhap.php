@@ -36,6 +36,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $redirectTarget = $_SESSION['redirect_after_login'] ?? '';
                 unset($_SESSION['redirect_after_login']);
 
+                $isTempPwd = !empty($_SESSION['temp_pwd_user_ids'][(int) $user['id']]);
+
                 session_regenerate_id(true);
                 $_SESSION['user'] = [
                     'id'         => (int) $user['id'],
@@ -45,6 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'vai_tro'    => strtoupper($user['vai_tro']),
                     'trang_thai' => $user['trang_thai'] ?? 'Hoạt động',
                 ];
+
+                if ($isTempPwd) {
+                    $_SESSION['show_change_pwd_modal'] = true;
+                }
 
                 if (strtoupper($user['vai_tro']) === 'ADMIN') {
                     header('Location: admin/index.php');
@@ -89,12 +95,18 @@ require_once __DIR__ . '/includes/header.php';
                             <input type="text" name="tai_khoan" class="form-control" value="<?= e($taiKhoan) ?>" placeholder="Nhập email hoặc số điện thoại" required autofocus>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group mb-2">
                             <label class="font-weight-bold small">Mật khẩu</label>
                             <input type="password" name="mat_khau" class="form-control" placeholder="Nhập mật khẩu" required>
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-block font-weight-bold py-2 mt-3">
+                        <div class="text-right mb-3">
+                            <a href="quen_mat_khau.php" class="small text-primary font-weight-semibold">
+                                <i class="fa-solid fa-key mr-1"></i>Quên mật khẩu?
+                            </a>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block font-weight-bold py-2 mt-2">
                             <i class="fa-solid fa-right-to-bracket mr-1"></i>Đăng nhập
                         </button>
                     </form>
